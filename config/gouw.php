@@ -13,6 +13,21 @@
 
 return [
 
+    /*
+    | The three fixed functions of the gouwbureau: key => [title, default description].
+    | Admins edit the description, people and contact details on /wie-is-wie;
+    | the titles and the order come from here.
+    */
+    'bureau' => [
+        'voorzitter' => ['Gouwvoorzitter', 'Verantwoordelijk voor de coördinatie binnen de gouw.'],
+        'commissaris' => ['Gouwcommissaris', 'De pedagogisch verantwoordelijke.'],
+        'beheerder' => ['Gouwbeheerder', "Verantwoordelijk voor de financiën en andere beheersmatige thema's."],
+    ],
+
+    /*
+    | Each district also gets a fixed "District <name>" function (its districtsploeg)
+    | on /wie-is-wie.
+    */
     'districts' => [
 
         'klaas' => [

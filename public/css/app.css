@@ -495,54 +495,263 @@ a.group-row:hover .group-name { color: var(--olive); }
 .roles {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    gap: 0 20px;
 }
 
-.role { border-top: 5px solid var(--orange); }
-.role p { color: var(--muted); }
-
-.themes {
+.role-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    align-items: start;
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 0 16px;
 }
 
-.theme {
+.role-grid-wide { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 20px; }
+
+.section-heading-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0 24px;
+}
+
+.section-heading-row .button { margin-bottom: 32px; }
+
+/* Cards in a row are equally tall, and their sections (title, description, people,
+   contact, link) line up across the row thanks to subgrid. Missing sections take no space. */
+.role-card {
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    min-width: 0;
+    /* Space between rows of cards: a row-gap on the parent grid would also land
+       between the subgrid's own tracks, inside the cards. */
+    margin-bottom: 16px;
+    padding: 22px 24px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-left: 5px solid var(--lime);
-    border-radius: 12px;
-    padding: 18px 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
 }
 
-.theme h3 { margin: 0; font-size: 1.1875rem; }
-.theme p { margin-top: 6px; color: var(--muted); font-size: .9688rem; }
+.role-card-bureau { border-top: 5px solid var(--orange); padding: 28px; }
+.role-card-adjunct { border-left: 5px solid var(--lime); border-radius: 12px; box-shadow: none; }
+.role-card-district { border-top: 5px solid var(--lime); }
 
-.district-links {
+.role-card-header { grid-row: 1; }
+.role-card-description { grid-row: 2; margin-top: 12px; }
+.role-card .people { grid-row: 3; margin-top: 16px; align-self: start; }
+.role-card .contact-links { grid-row: 4; margin-top: 16px; align-self: start; }
+.role-card-footer { grid-row: 5; }
+
+@supports not (grid-template-rows: subgrid) {
+    .role-card { display: flex; flex-direction: column; }
+}
+
+.role-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+}
+
+.role-card-header h3 { margin: 0; }
+.role-card-adjunct .role-card-header h3 { font-size: 1.1875rem; }
+.role-card-edit { margin-left: auto; min-height: 34px; padding: 3px 12px; font-size: .875rem; }
+
+.role-card-description { color: var(--muted); }
+.role-card-description p { margin: 0 0 .5em; }
+.role-card-description p:last-child { margin-bottom: 0; }
+
+/* Set by JavaScript when the text is longer than 4 lines. */
+.role-card-description.is-clamped .role-card-text {
+    max-height: 6.6em;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(#000 60%, transparent);
+    mask-image: linear-gradient(#000 60%, transparent);
+}
+
+.link-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--olive);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.link-button:hover { color: var(--ink); }
+.role-card-description .link-button { margin-top: 4px; }
+.role-card-adjunct .role-card-description { font-size: .9688rem; }
+
+.people {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 12px;
 }
 
-.district-links a {
+.person {
     display: flex;
-    flex-direction: column;
-    padding: 16px 20px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--surface);
-    color: var(--ink);
-    font-weight: 800;
-    text-decoration: none;
-    transition: border-color .15s, transform .15s;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
 }
 
-.district-links a:hover { border-color: var(--lime); transform: translateY(-2px); }
-.district-links .muted { font-weight: 400; font-size: .9375rem; }
+.avatar {
+    flex: none;
+    width: 64px;
+    height: 64px;
+    border-radius: 999px;
+    object-fit: cover;
+    background: var(--lime-light);
+    border: 2px solid var(--border);
+}
+
+.avatar-large { width: 96px; height: 96px; }
+
+/* The picture is already a grey disc. */
+.avatar-wanted { background: none; border: 0; }
+.person-wanted .person-name { color: var(--orange-dark); }
+
+.avatar-initials {
+    display: grid;
+    place-items: center;
+    color: var(--olive);
+    font-family: var(--font-heading);
+    font-size: 1.375rem;
+    font-weight: 700;
+}
+
+.avatar-large.avatar-initials { font-size: 2rem; }
+
+.person-info { min-width: 0; }
+.person-info p { margin: 0; line-height: 1.35; overflow-wrap: anywhere; }
+.person-name { font-weight: 800; color: var(--ink); }
+.person-totem { color: var(--olive); font-style: italic; }
+.person-title { color: var(--muted); font-size: .9375rem; }
+
+.contact-links {
+    list-style: none;
+    margin: 0;
+    padding: 14px 0 0;
+    border-top: 1px solid var(--border);
+    display: grid;
+    gap: 6px;
+    font-size: .9375rem;
+}
+
+.contact-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.contact-links a:hover span { text-decoration: underline; }
+.contact-links svg { flex: none; color: var(--orange); }
+
+.role-card-footer { margin: 16px 0 0; align-self: end; font-size: .9375rem; font-weight: 700; }
+.role-card-footer a { text-decoration: none; }
+.role-card-footer a::after { content: " →"; }
+.role-card-footer a:hover { text-decoration: underline; }
+
+/* Function form: people */
+.member-row-grid {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 0 20px;
+}
+
+.member-photo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+.photo-picker {
+    position: relative;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    cursor: pointer;
+}
+
+.photo-picker .avatar { display: block; }
+
+.photo-picker-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-radius: 999px;
+    background: rgba(31, 36, 8, .62);
+    color: #fff;
+    font-size: .8125rem;
+    font-weight: 800;
+    opacity: 0;
+    transition: opacity .15s;
+}
+
+.photo-picker:hover .photo-picker-overlay,
+.photo-picker:focus-visible .photo-picker-overlay { opacity: 1; }
+
+.photo-picker:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
+
+/* Touch screens can't hover: always show a small camera badge. */
+@media (hover: none) {
+    .photo-picker-overlay { inset: auto -2px -2px auto; width: 34px; height: 34px; opacity: 1; font-size: 0; background: var(--olive); }
+    .photo-picker-overlay svg { width: 18px; height: 18px; }
+}
+
+/* Circle cropper */
+.cropper {
+    width: min(440px, calc(100vw - 32px));
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    background: var(--surface);
+    color: var(--text);
+}
+
+.cropper::backdrop { background: rgba(31, 36, 8, .55); }
+
+.cropper-inner { padding: 24px; }
+.cropper-inner h2 { margin-bottom: 4px; font-size: 1.5rem; }
+
+.cropper-canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    margin: 12px 0 16px;
+    border-radius: 12px;
+    background: #2b2f1c;
+    cursor: grab;
+    touch-action: none;
+}
+
+.cropper-canvas:active { cursor: grabbing; }
+
+.cropper-zoom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.cropper-zoom input { flex: 1; accent-color: var(--olive); }
 
 /* Activities */
 .activity-list {
@@ -798,6 +1007,7 @@ label {
 
 input[type=text],
 input[type=email],
+input[type=url],
 input[type=password],
 input[type=number],
 input[type=tel],
@@ -963,6 +1173,7 @@ select:focus {
     .intro-grid,
     .districts,
     .roles,
+    .role-grid-wide,
     .activity-layout { grid-template-columns: 1fr; }
 
     .registration-card { position: static; }
@@ -991,7 +1202,10 @@ select:focus {
     .details div { grid-template-columns: 1fr; gap: 0; }
 
     .form-grid,
-    .field-row-main { grid-template-columns: 1fr; }
+    .field-row-main,
+    .member-row-grid { grid-template-columns: 1fr; }
+    .member-photo { align-items: flex-start; margin-bottom: 12px; }
+    .role-card-bureau { padding: 22px; }
 
     .activity-card { gap: 14px; padding: 16px; }
     .date-badge { width: 58px; height: 64px; }

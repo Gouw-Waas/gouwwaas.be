@@ -26,8 +26,8 @@ The site is in Dutch (`APP_LOCALE=nl`).
 - `/` – home: introduction and how to join (`resources/views/home.blade.php`)
 - `/districten` – the four districts with their groups, each linking to its website
   (`resources/views/districten.blade.php`)
-- `/wie-is-wie` – gouwbureau, adjuncten and districtscommissarissen
-  (`resources/views/wie-is-wie.blade.php`)
+- `/wie-is-wie` – gouwbureau, adjuncten and districtsploegen; admins edit them
+  (`resources/views/wie-is-wie/`)
 - `/activiteiten` – upcoming and past activities; anyone can open one and register
   until the registration deadline (`resources/views/activiteiten/`)
 - `/login` – login; once logged in the header shows "Welkom {naam}!"
@@ -50,6 +50,19 @@ name and e-mail. Only the creator (or an admin) can edit or delete an activity a
 see its registrations, which can be downloaded as a CSV for Excel. Answers keep a
 copy of the question label, so changing or removing a question later does not
 lose earlier answers. Payment is not handled online: the price is informational.
+
+**Wie is wie.** Every function (`roles` table) has a category: `bureau`, `adjunct`
+or `district`. Admins see a "Bewerken" button on each function to change its
+description, contact details (e-mail, Instagram, Facebook, website; only what is
+filled in is shown) and the people filling it (`role_members`: first and last name,
+optional totem, function title and photo). A function without people shows an empty
+person with "Gezocht!" (`public/images/gezocht.png`). Only adjuncten can be added, renamed or deleted; the three gouwbureau
+functions (`config/gouw.php`, `bureau`) and one function per district are fixed and
+take their title and order from the config. Admins click a person's picture to choose a photo and crop it to a circle in the
+browser; only the cropped 400×400 image (WebP, or PNG on older Safari) is uploaded.
+Long descriptions are shortened on the page with a "Lees meer" button. Photos are
+stored on the `public` disk,
+so run `php artisan storage:link` once locally (deploys do this automatically).
 
 **Districts and groups** are listed in `config/gouw.php` (source: Scoutnet) as
 `[name, municipality, group number, website]`. Edit that file to add, remove or

@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'home', ['districts' => config('gouw.districts')])->name('home');
 Route::view('/districten', 'districten', ['districts' => config('gouw.districts')])->name('districten');
-Route::view('/wie-is-wie', 'wie-is-wie', ['districts' => config('gouw.districts')])->name('wie-is-wie');
+Route::get('/wie-is-wie', [RoleController::class, 'index'])->name('wie-is-wie');
 Route::get('/activiteiten', [ActivityController::class, 'index'])->name('activiteiten.index');
 
 Route::middleware('auth')->group(function () {
@@ -61,5 +62,12 @@ Route::middleware('auth')->group(function () {
             ->parameters(['gebruikers' => 'gebruiker']);
         Route::post('/gebruikers/{gebruiker}/wachtwoord-reset', [UserController::class, 'forcePasswordReset'])
             ->name('gebruikers.wachtwoord-reset');
+
+        // Wie is wie: only adjuncten can be added or removed (checked in the controller).
+        Route::get('/wie-is-wie/adjuncten/nieuw', [RoleController::class, 'create'])->name('wie-is-wie.create');
+        Route::post('/wie-is-wie', [RoleController::class, 'store'])->name('wie-is-wie.store');
+        Route::get('/wie-is-wie/{role}/bewerken', [RoleController::class, 'edit'])->name('wie-is-wie.edit');
+        Route::put('/wie-is-wie/{role}', [RoleController::class, 'update'])->name('wie-is-wie.update');
+        Route::delete('/wie-is-wie/{role}', [RoleController::class, 'destroy'])->name('wie-is-wie.destroy');
     });
 });
