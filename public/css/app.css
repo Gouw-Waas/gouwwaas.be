@@ -1529,13 +1529,22 @@ select:focus {
     .card { padding: 22px; }
     .district-header { padding-left: 18px; padding-right: 18px; }
     .group-list { padding-left: 6px; padding-right: 6px; }
-    .federation-link img { height: 110px; }
-
-    .footer-inner { grid-template-columns: 1fr; }
-    .footer-about { flex-wrap: wrap; gap: 18px; }
-    .footer-about > div { flex: 1 1 230px; }
-    .footer-logo { width: 110px; }
-    .footer-federation { justify-self: start; }
+    /* Footer: both logos side by side on top, the address and links underneath. */
+    .footer-inner {
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "logo federation"
+            "info info";
+        gap: 24px 16px;
+        padding-top: 36px;
+        padding-bottom: 36px;
+    }
+    .footer-about { display: contents; }
+    .footer-logo { grid-area: logo; width: 120px; }
+    .footer-about > div { grid-area: info; }
+    .footer-federation { grid-area: federation; justify-self: end; }
+    /* As tall as the Gouw Waas logo next to it (120px wide = 86px tall). */
+    .federation-link img { height: 86px; }
 }
 
 /* Phones: at the bottom, clear of the taller header. */
