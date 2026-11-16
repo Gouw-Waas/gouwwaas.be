@@ -1,0 +1,29 @@
+# Local development database. Production runs MariaDB 10.6, so we do too.
+#
+#   docker compose up -d       start (data is kept in the "db-data" volume)
+#   docker compose down        stop
+#   docker compose down -v     stop and delete all local data
+#
+# Port 3307 on the host, so it doesn't clash with a local MySQL/XAMPP on 3306.
+services:
+  db:
+    image: mariadb:10.6
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: gouwwaas
+      MARIADB_USER: gouwwaas
+      MARIADB_PASSWORD: secret
+      MARIADB_ROOT_PASSWORD: root
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db-data:

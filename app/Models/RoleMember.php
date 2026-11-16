@@ -36,9 +36,17 @@ class RoleMember extends Model
         return Str::upper(Str::substr($this->first_name, 0, 1).Str::substr($this->last_name, 0, 1));
     }
 
+    /**
+     * Null when there is no photo, or when the file is missing (e.g. a local copy of
+     * the production data without the uploads): the views then show initials.
+     */
     public function photoUrl(): ?string
     {
-        return $this->photo_path ? Storage::disk(self::PHOTO_DISK)->url($this->photo_path) : null;
+        if (! $this->photo_path || ! Storage::disk(self::PHOTO_DISK)->exists($this->photo_path)) {
+            return null;
+        }
+
+        return Storage::disk(self::PHOTO_DISK)->url($this->photo_path);
     }
 
     public function deletePhoto(): void

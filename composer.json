@@ -34,15 +34,25 @@
     "scripts": {
         "setup": [
             "composer install",
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "npm install --ignore-scripts",
-            "npm run build"
+            "docker compose up -d --wait",
+            "@php artisan migrate --force --seed",
+            "@php artisan storage:link"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "@php artisan dev"
+        ],
+        "dev:local": [
+            "Composer\\Config::disableProcessTimeout",
+            "@putenv APP_ENV=local",
+            "docker compose up -d --wait",
+            "@php artisan db:pull-production --force",
+            "@php artisan serve --port=8000"
+        ],
+        "dev:prod": [
+            "Composer\\Config::disableProcessTimeout",
+            "@putenv APP_ENV=prod",
+            "@php artisan serve --port=8001"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
@@ -54,9 +64,6 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-        ],
-        "post-root-package-install": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi",
@@ -82,5 +89,9 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts-descriptions": {
+        "dev:local": "Start the Docker database, copy the (anonymised) production data, create admin@gouwwaas.be and serve on :8000",
+        "dev:prod": "Serve on :8001 against the PRODUCTION database (.env.prod)"
+    }
 }

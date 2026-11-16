@@ -2,22 +2,59 @@
 
 Laravel 13 website (PHP 8.4+) for Gouw Waas.
 
-## Setup
+## Local development
 
-1. `composer install`
-2. `cp .env.example .env` and `php artisan key:generate`
-3. Configure the database in `.env`:
-   ```
-   DB_CONNECTION=mysql   # or pgsql, sqlite, sqlsrv
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=gouwwaas
-   DB_USERNAME=root
-   DB_PASSWORD=
-   ```
-4. `php artisan migrate`
-5. Create a login: `php artisan user:create "Your Name" you@example.com` (asks for a password)
-6. `php artisan serve` and open http://localhost:8000
+Two ways to run the site locally, each with its own env file:
+
+| | Env file | Database | URL |
+| --- | --- | --- | --- |
+| **Local** (default) | `.env.local` (committed) | MariaDB in Docker, with an anonymised copy of the production data | http://localhost:8000 |
+| **Production data** | `.env.prod` (never committed) | the real production database | http://localhost:8001 |
+
+There is no `.env` locally: without one, Laravel uses `.env.local`
+(`bootstrap/app.php`), and `APP_ENV=prod` switches to `.env.prod`. Servers keep using
+their own `.env`.
+
+### First time
+
+1. Install PHP 8.4+, Composer and Docker Desktop
+2. `composer install`
+3. `cp .env.prod.example .env.prod` and fill in the production database credentials
+   (needed to copy production data; skip it and use `composer setup` for an empty site)
+
+### Run
+
+PhpStorm has two run configurations for this (`.run/`), or use Composer:
+
+- `composer dev:local` – starts the Docker database (MariaDB 10.6, the production
+  version, on port 3307), replaces the local database with an anonymised copy of the
+  production data, and serves on :8000. Log in as **admin@gouwwaas.be** / **password**.
+- `composer dev:prod` – serves on :8001 against the **production database**. Everything
+  you change there is live. Sessions and cache stay on your machine and e-mail only goes
+  to the log, but data you save is real.
+
+Both can run at the same time (separate ports and session cookies).
+
+Without production access: `composer setup` starts Docker, creates the tables and the
+admin account, after which `php artisan serve` works.
+
+`docker compose down` stops the database (the data is kept); `docker compose down -v`
+deletes it.
+
+### What the production copy contains
+
+`php artisan db:pull-production` (part of `composer dev:local`) rebuilds the local
+schema and copies the production data, reading production only (credentials from
+`.env.prod`). It refuses to run when the local database is the production database or
+when `APP_ENV=production`. On the way:
+
+- production accounts are **not** copied: the only local user is admin@gouwwaas.be
+  (password `password`), who takes over every activity;
+- registrants get fake names, e-mail addresses and answers (dropdown, checkbox and
+  number answers are kept);
+- sessions, cache, jobs and password reset tokens are not copied;
+- uploaded photos are not copied: people whose photo isn't on your disk show their
+  initials.
 
 ## Pages
 
