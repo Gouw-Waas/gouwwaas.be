@@ -326,6 +326,59 @@ a:hover { color: var(--olive-dark); }
 .back-link::before { content: "← "; }
 .back-link:hover { text-decoration: underline; }
 
+/* Toast: status message after an action. Fixed, so it never pushes the page down. */
+.toast {
+    position: fixed;
+    top: 96px;
+    right: 24px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 12px 10px 12px 16px;
+    border-left: 5px solid var(--lime);
+    border-radius: 12px;
+    background: var(--ink);
+    color: #fff;
+    font-weight: 700;
+    line-height: 1.4;
+    box-shadow: 0 10px 30px rgba(31, 36, 8, .25);
+    animation: toast-in .25s ease-out, toast-out .35s ease-in 3s forwards;
+}
+
+.toast:hover { animation-play-state: paused; }
+.toast svg { flex: none; color: var(--lime); }
+
+.toast-close {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, .75);
+    font: inherit;
+    font-size: 1.375rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.toast-close:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(-12px); }
+}
+
+@keyframes toast-out {
+    to { opacity: 0; transform: translateY(-12px); visibility: hidden; pointer-events: none; }
+}
+
+/* Reduced motion: no sliding, just disappear. */
+@keyframes toast-fade {
+    to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+
 /* Status messages */
 .flash {
     margin: 24px 0 0;
@@ -1232,7 +1285,16 @@ select:focus {
     .footer-federation { justify-self: start; }
 }
 
+/* Phones: at the bottom, clear of the taller header. */
+@media (max-width: 640px) {
+    .toast { top: auto; right: 16px; bottom: 16px; left: 16px; max-width: none; }
+
+    @keyframes toast-in { from { opacity: 0; transform: translateY(12px); } }
+    @keyframes toast-out { to { opacity: 0; transform: translateY(12px); visibility: hidden; pointer-events: none; } }
+}
+
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
+    .toast { animation-name: none, toast-fade; }
     *, *::before, *::after { transition: none !important; }
 }
