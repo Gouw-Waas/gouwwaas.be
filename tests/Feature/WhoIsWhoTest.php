@@ -59,6 +59,44 @@ class WhoIsWhoTest extends TestCase
         $this->assertSame(count(config('gouw.districts')), Role::where('category', Role::DISTRICT)->count());
     }
 
+    public function test_functions_without_people_are_listed_at_the_bottom_with_a_call_to_action(): void
+    {
+        $filled = $this->role(Role::BUREAU, 'voorzitter');
+        $filled->members()->create(['first_name' => 'An', 'last_name' => 'Peeters']);
+        $vacant = Role::where('key', 'commissaris')->firstOrFail();
+
+        $this->get('/wie-is-wie')->assertOk()
+            // Filled functions in their own section, the vacant one only under "Openstaande functies".
+            ->assertSeeInOrder(['Het gouwbureau', 'Gouwvoorzitter', 'An Peeters', 'Nog open:', 'Gouwcommissaris', 'Adjuncten', 'Districtsploegen', 'Openstaande functies', 'Gouwcommissaris', 'Gezocht!', 'Zin om mee te helpen?'], false)
+            ->assertSee('href="#functie-'.$vacant->id.'"', false)
+            ->assertSee('mailto:gouwbureau@gouwwaas.be', false);
+    }
+
+    public function test_three_or_more_people_are_shown_side_by_side(): void
+    {
+        $small = $this->role(Role::BUREAU, 'voorzitter');
+        $small->members()->createMany([['first_name' => 'A', 'last_name' => 'A'], ['first_name' => 'B', 'last_name' => 'B']]);
+        $big = Role::where('key', 'klaas')->firstOrFail();
+        $big->members()->createMany([['first_name' => 'C', 'last_name' => 'C'], ['first_name' => 'D', 'last_name' => 'D'], ['first_name' => 'E', 'last_name' => 'E']]);
+
+        $html = $this->get('/wie-is-wie')->assertOk()->getContent();
+
+        $card = fn (Role $role) => str($html)->after('id="functie-'.$role->id.'"')->before('</article>');
+        $this->assertStringContainsString('people-compact', $card($big));
+        $this->assertStringNotContainsString('people-compact', $card($small));
+    }
+
+    public function test_no_open_functions_section_when_everything_is_filled(): void
+    {
+        $this->get('/wie-is-wie');
+        Role::all()->each(fn (Role $role) => $role->members()->create(['first_name' => 'X', 'last_name' => 'Y']));
+
+        $this->get('/wie-is-wie')->assertOk()
+            ->assertDontSee('Openstaande functies')
+            ->assertDontSee('Nog open:')
+            ->assertDontSee('Gezocht!');
+    }
+
     public function test_fixed_functions_follow_config_renames(): void
     {
         $this->get('/wie-is-wie');

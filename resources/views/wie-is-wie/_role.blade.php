@@ -1,6 +1,10 @@
-{{-- One function on /wie-is-wie. $variant: bureau | adjunct | district; $district only for districts. --}}
+{{-- One function on /wie-is-wie. $variant: bureau | adjunct | district; $district only for districts;
+     $showCategory adds a small label with the level (used under "Openstaande functies"). --}}
 <article class="role-card role-card-{{ $variant }}" id="functie-{{ $role->id }}">
     <header class="role-card-header">
+        @if ($showCategory ?? false)
+            <p class="role-card-category">{{ $role->categoryLabel() }}</p>
+        @endif
         <h3>{{ $role->title }}</h3>
         @can('admin')
             <a href="{{ route('wie-is-wie.edit', $role) }}" class="button button-ghost button-small role-card-edit" aria-label="{{ $role->title }} bewerken">Bewerken</a>
@@ -13,7 +17,8 @@
         </div>
     @endif
 
-    <ul class="people">
+    {{-- From 3 people on, side by side with smaller photos, so a big team doesn't stretch the whole row. --}}
+    <ul @class(['people', 'people-compact' => $role->members->count() >= 3])>
         @forelse ($role->members as $member)
             <li class="person">
                 @if ($member->photoUrl())

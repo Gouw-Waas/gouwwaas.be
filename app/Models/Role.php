@@ -43,6 +43,19 @@ class Role extends Model
         return $this->hasMany(RoleMember::class)->orderBy('position')->orderBy('id');
     }
 
+    /**
+     * The level of the organisation, as shown on a card outside its own section.
+     */
+    public function categoryLabel(): string
+    {
+        return match ($this->category) {
+            self::BUREAU => 'Gouwbureau',
+            self::ADJUNCT => 'Adjunct',
+            self::DISTRICT => 'Districtsploeg',
+            default => '',
+        };
+    }
+
     public function isAdjunct(): bool
     {
         return $this->category === self::ADJUNCT;

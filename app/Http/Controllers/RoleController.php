@@ -22,12 +22,16 @@ class RoleController extends Controller
             $roles = $load();
         }
 
-        $roles = $roles->filter->isListed()->groupBy('category');
+        // Functions without people are listed together at the bottom, under "Openstaande functies".
+        [$filled, $vacant] = $roles->filter->isListed()->partition(fn (Role $role) => $role->members->isNotEmpty());
+        $filled = $filled->groupBy('category');
+        $categoryOrder = array_flip([Role::BUREAU, Role::ADJUNCT, Role::DISTRICT]);
 
         return view('wie-is-wie.index', [
-            'bureau' => $roles->get(Role::BUREAU, collect()),
-            'adjuncten' => $roles->get(Role::ADJUNCT, collect()),
-            'districtRoles' => $roles->get(Role::DISTRICT, collect()),
+            'bureau' => $filled->get(Role::BUREAU, collect()),
+            'adjuncten' => $filled->get(Role::ADJUNCT, collect()),
+            'districtRoles' => $filled->get(Role::DISTRICT, collect()),
+            'vacant' => $vacant->sortBy(fn (Role $role) => [$categoryOrder[$role->category], $role->position, $role->id])->values(),
             'districts' => config('gouw.districts'),
         ]);
     }

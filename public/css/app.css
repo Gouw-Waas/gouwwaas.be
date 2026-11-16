@@ -681,6 +681,28 @@ a.group-row:hover .group-name { color: var(--olive); }
 
 .avatar-large.avatar-initials { font-size: 2rem; }
 
+/* Side by side (3+ people): photo on top, text centred underneath */
+.people-compact {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 16px 8px;
+}
+
+.people-compact .person {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.people-compact .avatar { width: 56px; height: 56px; }
+.people-compact .avatar-initials { font-size: 1.125rem; }
+.people-compact .person-name { font-size: .875rem; }
+
+/* Long names: hyphenate (Dutch, from <html lang>) instead of breaking at a random letter */
+.people-compact .person-info p { overflow-wrap: break-word; hyphens: auto; }
+.people-compact .person-totem,
+.people-compact .person-title { font-size: .8125rem; }
+
 .person-info { min-width: 0; }
 .person-info p { margin: 0; line-height: 1.35; overflow-wrap: anywhere; }
 .person-name { font-weight: 800; color: var(--ink); }
@@ -713,6 +735,44 @@ a.group-row:hover .group-name { color: var(--olive); }
 .role-card-footer a { text-decoration: none; }
 .role-card-footer a::after { content: " →"; }
 .role-card-footer a:hover { text-decoration: underline; }
+
+/* Under a section: links to its functions under "Openstaande functies" */
+.still-open {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: .9375rem;
+}
+
+.still-open svg { flex: none; margin-top: 3px; color: var(--orange); }
+.still-open a { font-weight: 700; }
+
+/* Small level label on cards outside their own section */
+.role-card-category {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--orange-dark);
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+/* Shorter call to action, under the open functions (.cta.cta-compact: overrides .cta further down) */
+.cta.cta-compact {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 32px;
+    margin-top: 24px;
+    padding: clamp(24px, 4vw, 36px);
+}
+
+.cta.cta-compact h2 { margin-bottom: .25em; font-size: 1.5rem; }
+.cta.cta-compact p { margin: 0; }
 
 /* Function form: people */
 .member-row-grid {

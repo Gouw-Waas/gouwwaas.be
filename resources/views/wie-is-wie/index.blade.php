@@ -23,6 +23,7 @@
                 @include('wie-is-wie._role', ['role' => $role, 'variant' => 'bureau'])
             @endforeach
         </div>
+        @include('wie-is-wie._still-open', ['open' => $vacant->where('category', \App\Models\Role::BUREAU)])
     </section>
 
     <section class="section section-tinted">
@@ -41,12 +42,11 @@
             </div>
 
             <div class="role-grid">
-                @forelse ($adjuncten as $role)
+                @foreach ($adjuncten as $role)
                     @include('wie-is-wie._role', ['role' => $role, 'variant' => 'adjunct'])
-                @empty
-                    <p class="muted">Er zijn nog geen adjuncten.</p>
-                @endforelse
+                @endforeach
             </div>
+            @include('wie-is-wie._still-open', ['open' => $vacant->where('category', \App\Models\Role::ADJUNCT)])
         </div>
     </section>
 
@@ -64,7 +64,41 @@
                 @include('wie-is-wie._role', ['role' => $role, 'variant' => 'district', 'district' => $districts[$role->key]])
             @endforeach
         </div>
+        @include('wie-is-wie._still-open', ['open' => $vacant->where('category', \App\Models\Role::DISTRICT)])
     </section>
+
+    @if ($vacant->isNotEmpty())
+        <section class="section section-tinted" id="openstaande-functies">
+            <div class="container">
+                <div class="section-heading">
+                    <h2>Openstaande functies</h2>
+                    <p>Voor deze functies zoeken we nog iemand.</p>
+                </div>
+
+                <div class="role-grid">
+                    @foreach ($vacant as $role)
+                        @include('wie-is-wie._role', [
+                            'role' => $role,
+                            'variant' => $role->category,
+                            'showCategory' => true,
+                            'district' => $role->category === \App\Models\Role::DISTRICT ? $districts[$role->key] : null,
+                        ])
+                    @endforeach
+                </div>
+
+                <div class="cta cta-compact">
+                    <div class="cta-text">
+                        <h2>Zin om mee te helpen?</h2>
+                        <p>Neem contact met ons op, dan bekijken we samen welke functie bij jou past.</p>
+                    </div>
+                    <div class="cta-actions">
+                        <a href="mailto:gouwbureau@gouwwaas.be" class="button button-accent">Stuur ons een mailtje</a>
+                        <a href="https://www.instagram.com/gouw.waas/" class="button button-outline-light" rel="noopener">Stuur een bericht op Instagram</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    @endif
 
     <script>
         // Long descriptions are cut off after a few lines, with a button to read the rest.
