@@ -35,6 +35,19 @@ PhpStorm has two run configurations for this (`.run/`), or use Composer:
 
 Both can run at the same time (separate ports and session cookies).
 
+**E-mail locally** goes to [Mailpit](https://mailpit.axllent.org) (started by
+`docker compose up -d`): read everything the site sends at http://localhost:8025;
+nothing reaches real addresses.
+
+**Secrets for `.env.local`** (such as the Mollie test key, `MOLLIE_API_KEY=test_…`) go in
+`.env.local.secrets` next to it. That file is git-ignored and its values override
+`.env.local` (`bootstrap/app.php`), so `.env.local` itself can stay committed. Copy
+`.env.local.secrets.example` to start. With a `test_…` key, payments are test payments:
+Mollie's checkout lets you choose the outcome (paid, failed, canceled, …).
+
+After changing an env file, restart `php artisan serve`: a running server keeps the old
+values.
+
 Without production access: `composer setup` starts Docker, creates the tables and the
 admin account, after which `php artisan serve` works.
 
@@ -84,9 +97,31 @@ with a start (and optional end), location, description, registration deadline,
 price (empty = free) and their own registration questions (short/long text,
 number, e-mail, phone, date, dropdown, checkbox). Registrants always give their
 name and e-mail. Only the creator (or an admin) can edit or delete an activity and
-see its registrations, which can be downloaded as a CSV for Excel. Answers keep a
+see its registrations, which can be downloaded as an Excel file (.xlsx). Answers keep a
 copy of the question label, so changing or removing a question later does not
-lose earlier answers. Payment is not handled online: the price is informational.
+lose earlier answers.
+
+**Payments and confirmation e-mails.** After registering, everyone lands on their
+registration's own page (`/inschrijvingen/{token}`, a secret 40-character token, never
+the id). For a free activity that page confirms the registration and a confirmation
+e-mail is sent straight away. For a paid activity it is the checkout: an overview and a
+"Betalen" button that starts a payment at [Mollie](https://www.mollie.com) and sends the
+payer to Mollie's checkout. Mollie sends them back to the same page, which asks Mollie
+for the status and shows the result: paid (registered, e-mail sent), still being
+processed by the bank, or failed / canceled / expired (not registered, "Opnieuw
+proberen"). Mollie also reports status changes to `/mollie/webhook`, so the
+registration is confirmed and mailed even if the payer never comes back; on a local
+address (`localhost`) no webhook is sent, because Mollie can't reach it. The e-mail is
+sent exactly once, and straight away (production has no queue worker). The price is
+stored with the registration, so a later price change doesn't change what was agreed.
+Organisers see the payment status per registration (overview and Excel); only paid and
+free registrations count. The code is in `app/Payments` (Mollie behind a
+`PaymentGateway` interface, faked in the tests).
+
+Participants can't cancel themselves: the confirmation e-mail and page say to reply or
+write to the sender address. Deleting a registration (or an activity) never refunds
+anything: the confirmation dialog says so, with the amount and Mollie payment id, and
+refunds are done by hand in the Mollie dashboard.
 
 **Wie is wie.** Every function (`roles` table) has a category: `bureau`, `adjunct`
 or `district`. Admins see a "Bewerken" button on each function to change its
@@ -166,6 +201,7 @@ Add these under *Settings → Secrets and variables → Actions*:
 | `MAIL_PORT` | Optional, defaults to `587` (use `465` for SSL) |
 | `MAIL_USERNAME`, `MAIL_PASSWORD` | SMTP login, usually the mailbox address and its password |
 | `MAIL_FROM_ADDRESS` | Optional, defaults to `gouwbureau@gouwwaas.be` |
+| `MOLLIE_API_KEY` | Mollie API key for activity payments (`live_…` in production, from the Mollie dashboard under *Developers → API keys*). Without it, paid activities show an error at checkout |
 
 ### One-time server setup
 

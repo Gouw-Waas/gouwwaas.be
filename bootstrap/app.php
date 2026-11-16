@@ -1,5 +1,7 @@
 <?php
 
+use Dotenv\Dotenv;
+use Dotenv\Repository\RepositoryBuilder;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,7 +15,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Mollie can't send a CSRF token; the webhook only takes a payment id and asks Mollie itself.
+        $middleware->validateCsrfTokens(except: ['mollie/webhook']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
@@ -26,5 +29,15 @@ $app = Application::configure(basePath: dirname(__DIR__))
 if (! is_file($app->basePath('.env')) && ! Env::get('APP_ENV')) {
     $app->loadEnvironmentFrom('.env.local');
 }
+
+// Secrets for a committed env file live next to it in a git-ignored "<file>.secrets"
+// (e.g. .env.local.secrets with MOLLIE_API_KEY) and win over the values in the file.
+$app->afterLoadingEnvironment(function (Application $app) {
+    $secrets = $app->environmentFile().'.secrets';
+
+    if (is_file($app->environmentPath().DIRECTORY_SEPARATOR.$secrets)) {
+        Dotenv::create(RepositoryBuilder::createWithDefaultAdapters()->make(), $app->environmentPath(), $secrets)->load();
+    }
+});
 
 return $app;

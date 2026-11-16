@@ -1,11 +1,13 @@
-# Local development database. Production runs MariaDB 10.6, so we do too.
+# Local development services.
 #
 #   docker compose up -d       start (data is kept in the "db-data" volume)
 #   docker compose down        stop
 #   docker compose down -v     stop and delete all local data
 #
-# Port 3307 on the host, so it doesn't clash with a local MySQL/XAMPP on 3306.
+# Ports only on 127.0.0.1, and 3307 for the database so it doesn't clash with a local
+# MySQL/XAMPP on 3306.
 services:
+  # Production runs MariaDB 10.6, so we do too.
   db:
     image: mariadb:10.6
     restart: unless-stopped
@@ -24,6 +26,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # Catches every e-mail the site sends (SMTP on 1025); read them at http://localhost:8025.
+  # Nothing is delivered to real addresses.
+  mail:
+    image: axllent/mailpit:v1.32
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
 
 volumes:
   db-data:

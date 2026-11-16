@@ -142,7 +142,7 @@
 
         @if ($group->exists)
             <form method="POST" action="{{ route('groepen.destroy', $group) }}" class="danger-zone"
-                  onsubmit="return confirm({{ Js::from("\"{$group->name}\" definitief verwijderen?") }})">
+                  data-confirm="&quot;{{ $group->name }}&quot; verwijderen?" data-confirm-text="De groep verdwijnt van de kaart en uit de lijst. Dit kan niet ongedaan gemaakt worden.">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="button button-danger">Groep verwijderen</button>

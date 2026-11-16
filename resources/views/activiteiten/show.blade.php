@@ -30,7 +30,7 @@
 
             @can('update', $activity)
                 <div class="owner-actions">
-                    <a href="{{ route('activiteiten.inschrijvingen', $activity) }}" class="button button-small">Inschrijvingen ({{ $activity->registrations()->count() }})</a>
+                    <a href="{{ route('activiteiten.inschrijvingen', $activity) }}" class="button button-small">Inschrijvingen ({{ $activity->registrations()->confirmed()->count() }})</a>
                     <a href="{{ route('activiteiten.edit', $activity) }}" class="button button-ghost button-small">Bewerken</a>
                 </div>
             @endcan
@@ -110,8 +110,12 @@
 
                         <p class="muted small"><span class="required" aria-hidden="true">*</span> verplicht</p>
 
+                        @unless ($activity->isFree())
+                            <p class="muted small">Na het invullen betaal je {{ $activity->priceLabel() }} online. Je inschrijving is pas definitief als de betaling gelukt is.</p>
+                        @endunless
+
                         <button type="submit" class="button button-accent button-block">
-                            Inschrijven{{ $activity->isFree() ? '' : ' · '.$activity->priceLabel() }}
+                            {{ $activity->isFree() ? 'Inschrijven' : 'Verder naar betalen · '.$activity->priceLabel() }}
                         </button>
                     </form>
                 @endif

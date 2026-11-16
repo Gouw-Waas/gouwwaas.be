@@ -18,6 +18,11 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    // Online payments for activities. A test_… key gives test payments.
+    'mollie' => [
+        'key' => env('MOLLIE_API_KEY'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],

@@ -145,8 +145,22 @@
         </form>
 
         @if ($activity->exists)
+            @php
+                $paid = $activity->registrations()->where('payment_status', 'paid');
+                $paidCount = $paid->count();
+                $paidTotal = $paid->sum('amount_cents');
+            @endphp
+            <template id="verwijder-activiteit">
+                @if ($paidCount)
+                    <div class="confirm-warning">
+                        <strong class="confirm-warning-title">{{ $paidCount }} {{ $paidCount === 1 ? 'deelnemer heeft' : 'deelnemers hebben' }} samen € {{ number_format($paidTotal / 100, 2, ',', '.') }} betaald.</strong>
+                        <p>Verwijderen betaalt niets terug: het geld blijft bij Mollie staan. Terugbetalen doe je zelf in het Mollie-dashboard; Mollie kan daar kosten voor aanrekenen.</p>
+                    </div>
+                @endif
+                <p>De activiteit en alle {{ $activity->registrations_count }} inschrijvingen verdwijnen definitief. Deelnemers krijgen geen bericht.</p>
+            </template>
             <form method="POST" action="{{ route('activiteiten.destroy', $activity) }}" class="danger-zone"
-                  onsubmit="return confirm({{ Js::from("\"{$activity->title}\" en alle inschrijvingen definitief verwijderen?") }})">
+                  data-confirm="&quot;{{ $activity->title }}&quot; verwijderen?" data-confirm-details="verwijder-activiteit">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="button button-danger">Activiteit verwijderen</button>

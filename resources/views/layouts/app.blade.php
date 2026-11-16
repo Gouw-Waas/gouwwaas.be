@@ -61,6 +61,19 @@
         @yield('content')
     </main>
 
+    {{-- Confirmation dialog for forms with data-confirm (public/js/confirm.js). --}}
+    <dialog class="confirm-dialog" data-confirm-dialog aria-labelledby="confirm-title">
+        <form method="dialog">
+            <h2 id="confirm-title" data-confirm-title></h2>
+            <div class="confirm-body" data-confirm-body></div>
+            <div class="confirm-actions">
+                <button type="submit" value="cancel" class="button button-ghost" autofocus>Annuleren</button>
+                <button type="submit" value="ok" class="button button-danger-solid" data-confirm-ok>Verwijderen</button>
+            </div>
+        </form>
+    </dialog>
+    <script src="{{ asset('js/confirm.js') }}?v={{ filemtime(public_path('js/confirm.js')) }}"></script>
+
     <footer class="site-footer">
         <div class="container footer-inner">
             <div class="footer-about">

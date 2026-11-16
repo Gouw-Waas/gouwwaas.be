@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
@@ -32,8 +33,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/activiteiten/{activity}', [ActivityController::class, 'destroy'])->name('activiteiten.destroy');
 
     Route::get('/activiteiten/{activity}/inschrijvingen', [RegistrationController::class, 'index'])->name('activiteiten.inschrijvingen');
-    Route::get('/activiteiten/{activity}/inschrijvingen.csv', [RegistrationController::class, 'export'])->name('activiteiten.inschrijvingen.export');
-    Route::delete('/activiteiten/{activity}/inschrijvingen/{registration}', [RegistrationController::class, 'destroy'])
+    Route::get('/activiteiten/{activity}/inschrijvingen.xlsx', [RegistrationController::class, 'export'])->name('activiteiten.inschrijvingen.export');
+    // By id here (organisers only); the public registration page uses the secret token.
+    Route::delete('/activiteiten/{activity}/inschrijvingen/{registration:id}', [RegistrationController::class, 'destroy'])
         ->scopeBindings()
         ->name('activiteiten.inschrijvingen.destroy');
 });
@@ -42,6 +44,17 @@ Route::get('/activiteiten/{activity}', [ActivityController::class, 'show'])->nam
 Route::post('/activiteiten/{activity}/inschrijven', [RegistrationController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('activiteiten.inschrijven');
+
+// A registration's own page (by its secret token): checkout, return from Mollie, confirmation.
+Route::get('/inschrijvingen/{registration}', [CheckoutController::class, 'show'])->name('inschrijvingen.show');
+Route::post('/inschrijvingen/{registration}/betalen', [CheckoutController::class, 'pay'])
+    ->middleware('throttle:10,1')
+    ->name('inschrijvingen.betalen');
+
+// Mollie reports payment changes here (no CSRF token: see bootstrap/app.php).
+Route::post('/mollie/webhook', [CheckoutController::class, 'webhook'])
+    ->middleware('throttle:60,1')
+    ->name('mollie.webhook');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');

@@ -123,7 +123,7 @@
 
         @if ($role->exists && $role->isAdjunct())
             <form method="POST" action="{{ route('wie-is-wie.destroy', $role) }}" class="danger-zone"
-                  onsubmit="return confirm({{ Js::from("\"{$role->title}\" en alle gekoppelde personen definitief verwijderen?") }})">
+                  data-confirm="&quot;{{ $role->title }}&quot; verwijderen?" data-confirm-text="De functie en alle gekoppelde personen (met hun foto's) verdwijnen definitief.">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="button button-danger">Adjunct verwijderen</button>

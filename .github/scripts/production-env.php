@@ -51,6 +51,10 @@ $env = [
     'MAIL_PASSWORD' => getenv('MAIL_PASSWORD') ?: '',
     'MAIL_FROM_ADDRESS' => getenv('MAIL_FROM_ADDRESS') ?: 'gouwbureau@gouwwaas.be',
     'MAIL_FROM_NAME' => 'Gouw Waas',
+
+    // Online payments for activities (live_… key in production). Without it, paid
+    // activities can't be paid for: the checkout shows an error.
+    'MOLLIE_API_KEY' => getenv('MOLLIE_API_KEY') ?: '',
 ];
 
 $lines = [];

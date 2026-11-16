@@ -37,7 +37,7 @@ class RegistrationTest extends TestCase
             'name' => 'Jan Peeters',
             'email' => 'jan@example.com',
             'answers' => $this->answers($activity, ['Sint-Jozef', 'Welpen', '1', '3']),
-        ])->assertRedirect("/activiteiten/{$activity->slug}")->assertSessionHas('status');
+        ])->assertRedirect(); // to the registration's own page, see CheckoutTest
 
         $registration = $activity->registrations()->firstOrFail();
         $this->assertSame('Jan Peeters', $registration->name);
@@ -95,7 +95,7 @@ class RegistrationTest extends TestCase
             ->assertSee('Sint-Jozef');
     }
 
-    public function test_csv_export_neutralises_formulas(): void
+    public function test_export_is_an_excel_file_with_answers_as_plain_text(): void
     {
         $activity = $this->activityWithFields();
         $this->post("/activiteiten/{$activity->slug}/inschrijven", [
@@ -104,12 +104,32 @@ class RegistrationTest extends TestCase
             'answers' => $this->answers($activity, ['Sint-Jozef', 'Welpen', '1']),
         ]);
 
-        $csv = $this->actingAs($activity->user)->get("/activiteiten/{$activity->slug}/inschrijvingen.csv")
-            ->assertOk()
-            ->streamedContent();
+        $response = $this->actingAs($activity->user)->get("/activiteiten/{$activity->slug}/inschrijvingen.xlsx")->assertOk();
+        $this->assertSame('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString("inschrijvingen-{$activity->slug}.xlsx", $response->headers->get('Content-Disposition'));
 
-        $this->assertStringContainsString('"Ingeschreven op";Naam;E-mailadres;Groep;Tak', $csv);
-        $this->assertStringContainsString("'=HYPERLINK", $csv);
+        $content = $response->streamedContent();
+        $rows = $this->readXlsx($content);
+
+        $this->assertSame(['Ingeschreven op', 'Naam', 'E-mailadres', 'Betaling', 'Bedrag', 'Groep', 'Tak', 'Akkoord met de afspraken', 'Aantal personen'], $rows[0]);
+        $this->assertInstanceOf(\DateTimeInterface::class, $rows[1][0]); // a real date cell, sortable in Excel
+        $this->assertSame(['=HYPERLINK("http://evil")', 'jan@example.com', 'Gratis', '', 'Sint-Jozef', 'Welpen', 'Ja'], array_slice($rows[1], 1, 7));
+
+        // Stored as text, never as a formula.
+        $this->assertStringNotContainsString('<f>', $this->sheetXml($content));
+    }
+
+    private function sheetXml(string $xlsx): string
+    {
+        $file = tempnam(sys_get_temp_dir(), 'xlsx');
+        file_put_contents($file, $xlsx);
+        $zip = new \ZipArchive;
+        $zip->open($file);
+        $xml = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+        $zip->close();
+        @unlink($file);
+
+        return $xml;
     }
 
     public function test_others_cannot_export_or_delete_registrations(): void
@@ -122,7 +142,7 @@ class RegistrationTest extends TestCase
         $registration = $activity->registrations()->firstOrFail();
         $stranger = User::factory()->create();
 
-        $this->actingAs($stranger)->get("/activiteiten/{$activity->slug}/inschrijvingen.csv")->assertForbidden();
+        $this->actingAs($stranger)->get("/activiteiten/{$activity->slug}/inschrijvingen.xlsx")->assertForbidden();
         $this->actingAs($stranger)->delete("/activiteiten/{$activity->slug}/inschrijvingen/{$registration->id}")->assertForbidden();
 
         $this->actingAs($activity->user)->delete("/activiteiten/{$activity->slug}/inschrijvingen/{$registration->id}");

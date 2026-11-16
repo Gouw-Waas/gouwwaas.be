@@ -35,14 +35,15 @@
                         <a href="{{ route('gebruikers.edit', $user) }}" class="button button-ghost button-small">Bewerken</a>
 
                         <form method="POST" action="{{ route('gebruikers.wachtwoord-reset', $user) }}"
-                              onsubmit="return confirm({{ Js::from("Het huidige wachtwoord van {$user->name} wordt meteen ongeldig en er wordt een e-mail gestuurd naar {$user->email} om een nieuw te kiezen. Doorgaan?") }})">
+                              data-confirm="Wachtwoord van {{ $user->name }} resetten?" data-confirm-button="Wachtwoord resetten"
+                              data-confirm-text="Het huidige wachtwoord wordt meteen ongeldig en {{ $user->name }} wordt overal afgemeld. Er gaat een e-mail naar {{ $user->email }} om een nieuw wachtwoord te kiezen.">
                             @csrf
                             <button type="submit" class="button button-ghost button-small">Wachtwoord resetten</button>
                         </form>
 
                         @unless ($user->is(auth()->user()))
                             <form method="POST" action="{{ route('gebruikers.destroy', $user) }}"
-                                  onsubmit="return confirm({{ Js::from("{$user->name} definitief verwijderen?") }})">
+                                  data-confirm="{{ $user->name }} verwijderen?" data-confirm-text="{{ $user->name }} kan niet meer inloggen. Activiteiten van deze gebruiker blijven bestaan; beheerders kunnen ze nog beheren.">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="button button-danger button-small">Verwijderen</button>
