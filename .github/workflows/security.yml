@@ -7,6 +7,10 @@ name: Security scan
 # Results also appear under the repository's Security → Code scanning tab.
 # Separate from the deploy workflow, so a newly published advisory never
 # blocks an urgent deploy; a red run here means "update something".
+#
+# Fails on medium, high and critical findings, and on advisories that have no
+# severity rating yet (not assessed is not the same as harmless). Low findings
+# are still reported (job log, Security tab) but don't fail the run.
 
 on:
   push:
@@ -43,7 +47,7 @@ jobs:
           coverage: none
 
       - name: Audit composer.lock
-        run: composer audit --locked --no-interaction
+        run: composer audit --locked --no-interaction --ignore-severity=low
 
   # Vulnerable packages, committed secrets and misconfigurations (Trivy),
   # plus a CycloneDX SBOM of everything the site ships.
@@ -81,12 +85,12 @@ jobs:
           path: sbom.cdx.json
           retention-days: 90
 
-      - name: Fail on high or critical findings
+      - name: Fail on medium, high, critical or unrated findings
         run: >
           docker run --rm -v "$PWD:/src" -w /src ${{ env.TRIVY_IMAGE }}
           fs --quiet --scanners vuln,secret,misconfig
           --skip-dirs vendor --skip-dirs storage
-          --severity HIGH,CRITICAL --exit-code 1 .
+          --severity UNKNOWN,MEDIUM,HIGH,CRITICAL --exit-code 1 .
 
   # Insecure patterns in our own code: SQL injection, XSS, unsafe file or
   # shell use, weak crypto, hard-coded secrets. Like SpotBugs/Find Security Bugs.
