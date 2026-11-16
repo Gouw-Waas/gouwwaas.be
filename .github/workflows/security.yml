@@ -108,7 +108,7 @@ jobs:
           docker run --rm -e SEMGREP_SEND_METRICS=off -v "$PWD:/src" -w /src ${{ env.SEMGREP_IMAGE }}
           semgrep scan --metrics off
           --config p/php --config p/phpcs-security-audit --config p/secrets
-          --exclude vendor --exclude storage
+          --exclude vendor --exclude storage --exclude public/vendor
           --sarif --output semgrep.sarif --error
 
       - name: Upload to code scanning

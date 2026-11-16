@@ -10,6 +10,7 @@
     <link rel="apple-touch-icon" href="{{ asset('images/icon-192.png') }}">
     <link rel="preload" href="{{ asset('fonts/nunito-sans-variable.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
+    @stack('head')
 </head>
 <body>
     <a href="#content" class="skip-link">Naar de inhoud</a>

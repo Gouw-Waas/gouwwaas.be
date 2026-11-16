@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ScoutGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -25,13 +26,13 @@ class SiteTest extends TestCase
 
         foreach (config('gouw.districts') as $district) {
             $response->assertSee('District '.$district['name']);
+        }
 
-            foreach ($district['groups'] as [$name, , , $website]) {
-                $response->assertSee($name);
+        foreach (ScoutGroup::all() as $group) {
+            $response->assertSee($group->name);
 
-                if ($website) {
-                    $response->assertSee('href="'.$website.'"', false);
-                }
+            if ($group->website) {
+                $response->assertSee('href="'.$group->website.'"', false);
             }
         }
     }

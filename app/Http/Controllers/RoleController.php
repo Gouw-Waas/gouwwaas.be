@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\ScoutGroup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,7 @@ class RoleController extends Controller
             'districtRoles' => $filled->get(Role::DISTRICT, collect()),
             'vacant' => $vacant->sortBy(fn (Role $role) => [$categoryOrder[$role->category], $role->position, $role->id])->values(),
             'districts' => config('gouw.districts'),
+            'groupCounts' => ScoutGroup::query()->selectRaw('district, count(*) as total')->groupBy('district')->pluck('total', 'district'),
         ]);
     }
 

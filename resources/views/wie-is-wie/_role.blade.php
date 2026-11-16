@@ -1,4 +1,4 @@
-{{-- One function on /wie-is-wie. $variant: bureau | adjunct | district; $district only for districts;
+{{-- One function on /wie-is-wie. $variant: bureau | adjunct | district; $groupCount only for districts;
      $showCategory adds a small label with the level (used under "Openstaande functies"). --}}
 <article class="role-card role-card-{{ $variant }}" id="functie-{{ $role->id }}">
     <header class="role-card-header">
@@ -17,52 +17,13 @@
         </div>
     @endif
 
-    {{-- From 3 people on, side by side with smaller photos, so a big team doesn't stretch the whole row. --}}
-    <ul @class(['people', 'people-compact' => $role->members->count() >= 3])>
-        @forelse ($role->members as $member)
-            <li class="person">
-                @if ($member->photoUrl())
-                    <img src="{{ $member->photoUrl() }}" alt="" class="avatar" width="64" height="64" loading="lazy">
-                @else
-                    <span class="avatar avatar-initials" aria-hidden="true">{{ $member->initials() }}</span>
-                @endif
-                <div class="person-info">
-                    <p class="person-name">{{ $member->fullName() }}</p>
-                    @if ($member->totem)
-                        <p class="person-totem">{{ $member->totem }}</p>
-                    @endif
-                    @if ($member->title)
-                        <p class="person-title">{{ $member->title }}</p>
-                    @endif
-                </div>
-            </li>
-        @empty
-            {{-- Nobody fills this function yet. --}}
-            <li class="person person-wanted">
-                <img src="{{ asset('images/gezocht.png') }}" alt="" class="avatar avatar-wanted" width="64" height="64" loading="lazy">
-                <div class="person-info">
-                    <p class="person-name">Gezocht!</p>
-                </div>
-            </li>
-        @endforelse
-    </ul>
+    @include('wie-is-wie._people', ['role' => $role])
 
-    @if ($links = $role->contactLinks())
-        <ul class="contact-links">
-            @foreach ($links as $link)
-                <li>
-                    <a href="{{ $link['url'] }}" @if ($link['type'] !== 'email') rel="noopener" @endif>
-                        @include('wie-is-wie._icon', ['type' => $link['type']])
-                        <span>{{ $link['label'] }}</span>
-                    </a>
-                </li>
-            @endforeach
-        </ul>
-    @endif
+    @include('wie-is-wie._contact', ['role' => $role])
 
-    @isset($district)
+    @isset($groupCount)
         <p class="role-card-footer">
-            <a href="{{ route('districten') }}#district-{{ $role->key }}">{{ count($district['groups']) }} groepen bekijken</a>
+            <a href="{{ route('districten') }}#district-{{ $role->key }}">{{ $groupCount }} {{ $groupCount === 1 ? 'groep' : 'groepen' }} bekijken</a>
         </p>
     @endisset
 </article>

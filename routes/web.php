@@ -4,9 +4,12 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ScoutGroupController;
+use App\Models\ScoutGroup;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,8 +18,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::view('/', 'home', ['districts' => config('gouw.districts')])->name('home');
-Route::view('/districten', 'districten', ['districts' => config('gouw.districts')])->name('districten');
+Route::get('/', fn () => view('home', ['groupCount' => ScoutGroup::count()]))->name('home');
+Route::get('/districten', [DistrictController::class, 'index'])->name('districten');
 Route::get('/wie-is-wie', [RoleController::class, 'index'])->name('wie-is-wie');
 Route::get('/activiteiten', [ActivityController::class, 'index'])->name('activiteiten.index');
 
@@ -62,6 +65,15 @@ Route::middleware('auth')->group(function () {
             ->parameters(['gebruikers' => 'gebruiker']);
         Route::post('/gebruikers/{gebruiker}/wachtwoord-reset', [UserController::class, 'forcePasswordReset'])
             ->name('gebruikers.wachtwoord-reset');
+
+        // District logos and scouting groups on the map (/districten).
+        Route::get('/districten/{district}/bewerken', [DistrictController::class, 'edit'])->name('districten.edit');
+        Route::put('/districten/{district}', [DistrictController::class, 'update'])->name('districten.update');
+        Route::get('/districten/groepen/nieuw', [ScoutGroupController::class, 'create'])->name('groepen.create');
+        Route::post('/districten/groepen', [ScoutGroupController::class, 'store'])->name('groepen.store');
+        Route::get('/districten/groepen/{scoutGroup}/bewerken', [ScoutGroupController::class, 'edit'])->name('groepen.edit');
+        Route::put('/districten/groepen/{scoutGroup}', [ScoutGroupController::class, 'update'])->name('groepen.update');
+        Route::delete('/districten/groepen/{scoutGroup}', [ScoutGroupController::class, 'destroy'])->name('groepen.destroy');
 
         // Wie is wie: only adjuncten can be added or removed (checked in the controller).
         Route::get('/wie-is-wie/adjuncten/nieuw', [RoleController::class, 'create'])->name('wie-is-wie.create');

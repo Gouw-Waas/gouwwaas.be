@@ -92,7 +92,7 @@ class PullProductionData extends Command
                 }
 
                 if (! $productionTables->has($table)) {
-                    $this->line("  <comment>{$table}</comment>: not in production yet, left empty");
+                    $this->line("  <comment>{$table}</comment>: not in production yet, kept as created by the migrations");
 
                     continue;
                 }

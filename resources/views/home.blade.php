@@ -8,7 +8,7 @@
             <div class="hero-text">
                 <h1>Welkom bij Gouw&nbsp;Waas!</h1>
                 <p class="lead">
-                    Vier districten, {{ collect($districts)->sum(fn ($district) => count($district['groups'])) }} scoutsgroepen
+                    Vier districten, {{ $groupCount }} scoutsgroepen
                     en één thuisbasis: gouwhuis Karree in Sint-Niklaas.
                 </p>
                 <div class="hero-actions">

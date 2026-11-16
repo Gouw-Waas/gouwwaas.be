@@ -61,8 +61,8 @@ when `APP_ENV=production`. On the way:
 The site is in Dutch (`APP_LOCALE=nl`).
 
 - `/` – home: introduction and how to join (`resources/views/home.blade.php`)
-- `/districten` – the four districts with their groups, each linking to its website
-  (`resources/views/districten.blade.php`)
+- `/districten` – map of the four districts and their scouting groups, with a sidebar
+  per district and group; admins manage the groups (`resources/views/districten/`)
 - `/wie-is-wie` – gouwbureau, adjuncten and districtsploegen; admins edit them
   (`resources/views/wie-is-wie/`)
 - `/activiteiten` – upcoming and past activities; anyone can open one and register
@@ -101,10 +101,24 @@ Long descriptions are shortened on the page with a "Lees meer" button. Photos ar
 stored on the `public` disk,
 so run `php artisan storage:link` once locally (deploys do this automatically).
 
-**Districts and groups** are listed in `config/gouw.php` (source: Scoutnet) as
-`[name, municipality, group number, website]`. Edit that file to add, remove or
-rename a group or change its website (`null` = no link); the counts update
-automatically.
+**Districts and groups.** The four districts (name, map colour, outline) are in
+`config/gouw.php`. The scouting groups are in the database (`scout_groups`): name, group
+number (e.g. O3101G), type (gemengd, scouts, gidsen, zeescouts), meeting place address,
+location, website and logo. Admins add, edit and remove them on `/districten`, and set a
+logo per district there too ("Logo wijzigen" in the district panel; stored in the
+`districts` table, keyed like `config/gouw.php`). Logos are jpg, png or webp (no SVG, which
+can contain scripts) and appear at the top right of the sidebar panel. In the form,
+the location is set by clicking or dragging on a small map, or with "Zoek adres"
+(OpenStreetMap). The initial list (November 2026) comes from the Scouts en Gidsen
+Vlaanderen groepenzoeker.
+
+The map uses [Leaflet](https://leafletjs.com) 1.9.4 (in `public/vendor/leaflet`, BSD
+licence) with the grey base map of Digitaal Vlaanderen (GRB), and `public/js/districten.js`.
+Clicking a group or district opens it in the sidebar; links such as
+`/districten#groep-o3101g` or `/districten#district-klaas` open one directly. A district
+panel shows its districtsploeg from `/wie-is-wie`. District outlines appear as soon as
+`boundary` is filled in for a district in `config/gouw.php` (a list of
+`[latitude, longitude]` points). Groups without a location are listed but not on the map.
 
 Styling lives in `public/css/app.css` (no build step required). Colours come from
 the Gouw Waas emblem (`public/images/logo-*.webp`) and the Scouts en Gidsen

@@ -61,7 +61,7 @@
 
         <div class="role-grid role-grid-wide">
             @foreach ($districtRoles as $role)
-                @include('wie-is-wie._role', ['role' => $role, 'variant' => 'district', 'district' => $districts[$role->key]])
+                @include('wie-is-wie._role', ['role' => $role, 'variant' => 'district', 'groupCount' => $groupCounts[$role->key] ?? 0])
             @endforeach
         </div>
         @include('wie-is-wie._still-open', ['open' => $vacant->where('category', \App\Models\Role::DISTRICT)])
@@ -81,7 +81,7 @@
                             'role' => $role,
                             'variant' => $role->category,
                             'showCategory' => true,
-                            'district' => $role->category === \App\Models\Role::DISTRICT ? $districts[$role->key] : null,
+                            'groupCount' => $role->category === \App\Models\Role::DISTRICT ? ($groupCounts[$role->key] ?? 0) : null,
                         ])
                     @endforeach
                 </div>
