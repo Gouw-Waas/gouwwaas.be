@@ -20,12 +20,18 @@ class Registration extends Model
     /** Statuses after which Mollie won't change the payment anymore (except paid). */
     public const FAILED_STATUSES = ['failed', 'canceled', 'expired'];
 
+    /** A payment started at Mollie that may still come through: it holds a place. */
+    public const IN_PROGRESS_STATUSES = ['open', 'pending', 'authorized'];
+
+    public const SOURCE_MANUAL = 'manual';
+
     protected function casts(): array
     {
         return [
             'answers' => 'array',
             'amount_cents' => 'integer',
             'paid_at' => 'datetime',
+            'paid_manually' => 'boolean',
             'confirmation_sent_at' => 'datetime',
         ];
     }
@@ -54,7 +60,46 @@ class Registration extends Model
     /** @param Builder<Registration> $query */
     public function scopeConfirmed(Builder $query): void
     {
-        $query->where(fn (Builder $q) => $q->where('amount_cents', 0)->orWhere('payment_status', 'paid'));
+        $query->where(fn (Builder $q) => $q
+            ->where('amount_cents', 0)
+            ->orWhere('payment_status', 'paid')
+            ->orWhere('source', self::SOURCE_MANUAL));
+    }
+
+    /**
+     * Registrations that take a place: confirmed ones, and payments in progress at Mollie
+     * (so two people can't pay for the last place at the same time).
+     *
+     * @param  Builder<Registration>  $query
+     */
+    public function scopeTakingPlace(Builder $query): void
+    {
+        $query->where(fn (Builder $q) => $q
+            ->confirmed()
+            ->orWhereIn('payment_status', self::IN_PROGRESS_STATUSES));
+    }
+
+    public function isManual(): bool
+    {
+        return $this->source === self::SOURCE_MANUAL;
+    }
+
+    /**
+     * Paid through Mollie, so it can be refunded through Mollie.
+     */
+    public function paidOnline(): bool
+    {
+        return $this->payment_status === 'paid' && ! $this->paid_manually && filled($this->mollie_payment_id);
+    }
+
+    /**
+     * Organisers can mark it paid (cash, transfer…): not free, not paid, and no online payment in progress.
+     */
+    public function canBeMarkedPaid(): bool
+    {
+        return ! $this->isFree()
+            && $this->payment_status !== 'paid'
+            && ! in_array($this->payment_status, self::IN_PROGRESS_STATUSES, true);
     }
 
     public function isFree(): bool
@@ -62,9 +107,17 @@ class Registration extends Model
         return $this->amount_cents === 0;
     }
 
+    /**
+     * A participant: free, paid, or added by an organiser (who vouches for them, paid or not).
+     */
     public function isConfirmed(): bool
     {
-        return $this->isFree() || $this->payment_status === 'paid';
+        return $this->isFree() || $this->payment_status === 'paid' || $this->isManual();
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
     }
 
     public function paymentFailed(): bool
@@ -92,6 +145,14 @@ class Registration extends Model
     {
         if ($this->isFree()) {
             return 'Gratis';
+        }
+
+        if ($this->paid_manually) {
+            return 'Betaald (manueel)';
+        }
+
+        if ($this->isManual() && $this->payment_status !== 'paid') {
+            return 'Niet betaald (manueel)';
         }
 
         return match ($this->payment_status) {

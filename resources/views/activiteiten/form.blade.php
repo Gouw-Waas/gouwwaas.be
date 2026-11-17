@@ -102,6 +102,15 @@
                             <p class="error" id="price-error">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <div class="field">
+                        <label for="capacity">Maximum aantal deelnemers <span class="muted">(optioneel)</span></label>
+                        <input id="capacity" type="number" name="capacity" min="1" max="10000" step="1" inputmode="numeric" value="{{ old('capacity', $activity->capacity) }}" aria-describedby="capacity-hint @error('capacity') capacity-error @enderror" @error('capacity') aria-invalid="true" @enderror>
+                        <p class="hint" id="capacity-hint">Leeg laten = geen maximum. Is de activiteit volzet, dan kan niemand zich nog inschrijven.</p>
+                        @error('capacity')
+                            <p class="error" id="capacity-error">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
@@ -146,7 +155,9 @@
 
         @if ($activity->exists)
             @php
-                $paid = $activity->registrations()->where('payment_status', 'paid');
+                // Only Mollie payments are refunded automatically; manual ones are settled by hand.
+                $paid = $activity->registrations()->where('payment_status', 'paid')->where('paid_manually', false)->whereNotNull('mollie_payment_id');
+                $paidManually = $activity->registrations()->where('paid_manually', true)->count();
                 $paidCount = $paid->count();
                 $paidTotal = $paid->sum('amount_cents');
                 $confirmedCount = $activity->registrations()->confirmed()->count();
@@ -155,6 +166,12 @@
                 <p class="flash flash-error" role="alert">{{ $message }}</p>
             @enderror
             <template id="verwijder-activiteit">
+                @if ($paidManually)
+                    <div class="confirm-warning">
+                        <strong class="confirm-warning-title">{{ $paidManually }} {{ $paidManually === 1 ? 'deelnemer betaalde' : 'deelnemers betaalden' }} buiten de website om.</strong>
+                        <p>Die betalingen liepen niet via Mollie: regel die terugbetalingen zelf.</p>
+                    </div>
+                @endif
                 @if ($paidCount)
                     <div class="confirm-warning">
                         <strong class="confirm-warning-title">ALLE betaalde inschrijvingen worden volledig terugbetaald.</strong>

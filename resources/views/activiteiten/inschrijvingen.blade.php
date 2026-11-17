@@ -8,21 +8,39 @@
             <p><a href="{{ route('activiteiten.show', $activity) }}" class="back-link">{{ $activity->title }}</a></p>
             <div class="page-header-row">
                 <h1>Inschrijvingen</h1>
-                @if ($activity->registrations->isNotEmpty())
-                    <a href="{{ route('activiteiten.inschrijvingen.export', $activity) }}" class="button">Download (Excel)</a>
-                @endif
+                <div class="header-actions">
+                    <a href="{{ route('activiteiten.inschrijvingen.create', $activity) }}" class="button">Inschrijving toevoegen</a>
+                    @if ($activity->registrations->isNotEmpty())
+                        <a href="{{ route('activiteiten.mail', $activity) }}" class="button button-ghost">Deelnemers mailen</a>
+                        <a href="{{ route('activiteiten.inschrijvingen.export', $activity) }}" class="button button-ghost">Download (Excel)</a>
+                    @endif
+                </div>
             </div>
             @php
                 $confirmed = $activity->registrations->filter->isConfirmed()->count();
                 $unfinished = $activity->registrations->count() - $confirmed;
+                // Added by an organiser, paying later.
+                $toPay = $activity->registrations->filter(fn ($registration) => $registration->isManual() && $registration->canBeMarkedPaid())->count();
             @endphp
             <p class="lead">
                 {{ $confirmed }} {{ $confirmed === 1 ? 'inschrijving' : 'inschrijvingen' }}
+                @if ($toPay)
+                    <span class="muted">(waarvan {{ $toPay }} nog te betalen)</span>
+                @endif
                 @if ($unfinished)
                     <span class="muted">(+ {{ $unfinished }} niet betaald)</span>
                 @endif
                 · {{ $activity->dateLabel() }}
             </p>
+            @if ($activity->capacity)
+                @php($taken = $activity->takenPlaces())
+                <p @class(['places', 'places-full' => $taken >= $activity->capacity])>
+                    <strong>{{ $taken }} / {{ $activity->capacity }}</strong> plaatsen bezet{{ $taken >= $activity->capacity ? ': volzet' : '' }}
+                    @if ($taken > $confirmed)
+                        <span class="muted">(waarvan {{ $taken - $confirmed }} met een online betaling bezig)</span>
+                    @endif
+                </p>
+            @endif
         </div>
     </section>
 
@@ -67,6 +85,9 @@
                                         @unless ($registration->isFree())
                                             <span class="muted small">{{ $registration->amountLabel() }}</span>
                                         @endunless
+                                        @if ($registration->canBeMarkedPaid())
+                                            @include('activiteiten._mark-paid', ['registration' => $registration])
+                                        @endif
                                     </td>
                                 @endunless
                                 @foreach ($columns as $column)

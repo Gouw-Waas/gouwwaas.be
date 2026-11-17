@@ -6,6 +6,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DistrictController;
+use App\Http\Controllers\ManualRegistrationController;
+use App\Http\Controllers\ParticipantMailController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\RoleController;
@@ -35,13 +37,24 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/activiteiten/{activity}/inschrijvingen', [RegistrationController::class, 'index'])->name('activiteiten.inschrijvingen');
     Route::get('/activiteiten/{activity}/inschrijvingen.xlsx', [RegistrationController::class, 'export'])->name('activiteiten.inschrijvingen.export');
+    // Organisers adding someone themselves; "nieuw" before the {registration:id} routes.
+    Route::get('/activiteiten/{activity}/inschrijvingen/nieuw', [ManualRegistrationController::class, 'create'])->name('activiteiten.inschrijvingen.create');
+    Route::post('/activiteiten/{activity}/inschrijvingen', [ManualRegistrationController::class, 'store'])->name('activiteiten.inschrijvingen.store');
+    Route::get('/activiteiten/{activity}/deelnemers-mailen', [ParticipantMailController::class, 'create'])->name('activiteiten.mail');
+    Route::post('/activiteiten/{activity}/deelnemers-mailen', [ParticipantMailController::class, 'store'])
+        ->middleware('throttle:5,10')
+        ->name('activiteiten.mail.send');
     // By id here (organisers only); the public registration page uses the secret token.
+    Route::post('/activiteiten/{activity}/inschrijvingen/{registration:id}/betaald', [ManualRegistrationController::class, 'markPaid'])
+        ->scopeBindings()
+        ->name('activiteiten.inschrijvingen.paid');
     Route::delete('/activiteiten/{activity}/inschrijvingen/{registration:id}', [RegistrationController::class, 'destroy'])
         ->scopeBindings()
         ->name('activiteiten.inschrijvingen.destroy');
 });
 
 Route::get('/activiteiten/{activity}', [ActivityController::class, 'show'])->name('activiteiten.show');
+Route::get('/activiteiten/{activity}/agenda.ics', [ActivityController::class, 'calendar'])->name('activiteiten.agenda');
 Route::post('/activiteiten/{activity}/inschrijven', [RegistrationController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('activiteiten.inschrijven');

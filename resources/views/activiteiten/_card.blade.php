@@ -12,6 +12,9 @@
         </span>
         <span class="activity-tags">
             <span class="badge">{{ $activity->priceLabel() }}</span>
+            @if ($activity->isRegistrationOpen() && ($places = $activity->placesLabel()))
+                <span @class(['badge', 'badge-full' => $activity->isFull()])>{{ $places }}</span>
+            @endif
             @if ($activity->isRegistrationOpen())
                 <span class="badge badge-open">Inschrijven tot {{ $activity->registration_deadline->translatedFormat('j F, H:i') }}</span>
             @else

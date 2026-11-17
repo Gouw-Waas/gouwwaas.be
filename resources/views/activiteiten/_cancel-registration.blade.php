@@ -3,7 +3,7 @@
      belong to the form (form="…"), so they are sent along when confirming. --}}
 @php
     $formId = 'annuleer-'.$registration->id;
-    $paid = $registration->payment_status === 'paid';
+    $paid = $registration->paidOnline();
 @endphp
 
 <form method="POST" id="{{ $formId }}" action="{{ route('activiteiten.inschrijvingen.destroy', [$activity, $registration]) }}"
@@ -49,6 +49,12 @@
         </fieldset>
 
         <p>{{ $registration->name }} krijgt een e-mail dat de inschrijving geannuleerd is en het geld binnen enkele werkdagen teruggestort wordt.</p>
+    @elseif ($registration->paid_manually)
+        <div class="confirm-warning">
+            <strong class="confirm-warning-title">{{ $registration->name }} betaalde {{ $registration->amountLabel() }} buiten de website om.</strong>
+            <p>Die betaling liep niet via Mollie, dus de website kan ze niet terugstorten: regel de terugbetaling zelf.</p>
+        </div>
+        <p>{{ $registration->name }} krijgt een e-mail dat de inschrijving geannuleerd is.</p>
     @elseif ($registration->paymentProcessing())
         <div class="confirm-warning">
             <strong class="confirm-warning-title">De betaling wordt nog verwerkt door de bank.</strong>

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\ActivityField;
 use App\Payments\RegistrationCancellation;
+use App\Support\ActivityCalendar;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -58,6 +60,19 @@ class ActivityController extends Controller
     public function show(Activity $activity): View
     {
         return view('activiteiten.show', ['activity' => $activity->load('fields')]);
+    }
+
+    /**
+     * The activity as a calendar file (.ics), for "Zet in je agenda".
+     */
+    public function calendar(Activity $activity): Response
+    {
+        $calendar = ActivityCalendar::for($activity);
+
+        return response($calendar->ics(), 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="'.$calendar->filename().'"',
+        ]);
     }
 
     public function create(): View
@@ -147,6 +162,7 @@ class ActivityController extends Controller
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'registration_deadline' => ['required', 'date', 'before_or_equal:starts_at'],
             'price' => ['nullable', 'regex:/^\d{1,5}([.,]\d{1,2})?$/'],
+            'capacity' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'fields' => ['nullable', 'array', 'max:30'],
             'fields.*.id' => ['nullable', 'integer'],
             'fields.*.label' => ['required', 'string', 'max:255'],
@@ -166,6 +182,7 @@ class ActivityController extends Controller
             'ends_at' => 'einde',
             'registration_deadline' => 'inschrijvingsdeadline',
             'price' => 'prijs',
+            'capacity' => 'maximum aantal deelnemers',
         ]);
 
         // A dropdown needs at least one option to choose from.
@@ -185,6 +202,7 @@ class ActivityController extends Controller
             'ends_at' => $validated['ends_at'] ?? null,
             'registration_deadline' => $validated['registration_deadline'],
             'price_cents' => (int) round(((float) str_replace(',', '.', $validated['price'] ?? '0')) * 100),
+            'capacity' => filled($validated['capacity'] ?? null) ? (int) $validated['capacity'] : null,
         ];
 
         return [$attributes, $validated['fields'] ?? []];

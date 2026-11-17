@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activity;
-use App\Models\ActivityField;
 use App\Models\Registration;
 use App\Payments\CancellationException;
 use App\Payments\PaymentException;
@@ -31,29 +30,12 @@ class RegistrationController extends Controller
             return back()->withErrors(['registration' => 'De inschrijvingen voor deze activiteit zijn afgesloten.']);
         }
 
-        $fields = $activity->fields;
-
-        $rules = ['name' => ['required', 'string', 'max:255'], 'email' => ['required', 'email', 'max:255']];
-        $attributes = ['name' => 'naam', 'email' => 'e-mailadres'];
-
-        foreach ($fields as $field) {
-            $rules["answers.{$field->id}"] = $field->rules();
-            $attributes["answers.{$field->id}"] = '"'.$field->label.'"';
+        if ($activity->isFull()) {
+            return back()->withInput()->withErrors(['registration' => 'Deze activiteit is volzet.']);
         }
 
-        $validated = $request->validate($rules, [
-            'answers.*.accepted' => 'Vink :attribute aan.',
-            'answers.*.in' => 'Kies een geldige waarde voor :attribute.',
-        ], $attributes);
-
         $registration = $activity->registrations()->create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'answers' => $fields->map(fn (ActivityField $field) => [
-                'field_id' => $field->id,
-                'label' => $field->label,
-                'value' => $field->present($validated['answers'][$field->id] ?? null),
-            ])->values()->all(),
+            ...$activity->validateRegistration($request),
             // The price now: changing it later doesn't change what this person pays.
             'amount_cents' => $activity->price_cents,
         ]);
@@ -143,7 +125,7 @@ class RegistrationController extends Controller
 
         $adminCost = 0;
 
-        if ($registration->payment_status === 'paid') {
+        if ($registration->paidOnline()) {
             $request->merge(['admin_cost' => str_replace(',', '.', trim((string) $request->input('admin_cost', '0')))]);
             $validated = $request->validate([
                 'refund' => ['required', 'in:full,minus_costs'],

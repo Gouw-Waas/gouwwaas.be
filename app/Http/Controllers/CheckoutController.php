@@ -55,6 +55,13 @@ class CheckoutController extends Controller
                 return redirect()->route('inschrijvingen.show', $registration);
             }
 
+            // Only a payment in progress holds a place; otherwise there must be one left.
+            $holdsPlace = in_array($registration->payment_status, Registration::IN_PROGRESS_STATUSES, true);
+            if (! $holdsPlace && $registration->activity->isFull()) {
+                return redirect()->route('inschrijvingen.show', $registration)
+                    ->withErrors(['payment' => 'Deze activiteit is intussen volzet. Er is niets aangerekend.']);
+            }
+
             return redirect()->away($this->checkout->start($registration));
         } catch (PaymentException $e) {
             report($e);

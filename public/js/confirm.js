@@ -5,7 +5,8 @@
  *       data-confirm-text="Dit kan niet ongedaan gemaakt worden."   (optional, plain text)
  *       data-confirm-details="some-template-id"                      (optional, <template> with HTML)
  *       data-confirm-button="Verwijderen"                            (optional, default "Verwijderen")
- *       data-confirm-cancel="Terug">                                 (optional, default "Annuleren")
+ *       data-confirm-cancel="Terug"                                  (optional, default "Annuleren")
+ *       data-confirm-tone="neutral">                                 (optional: not destructive, no red)
  *
  * Inputs in the template can belong to the form with form="<form id>": they are sent along.
  *
@@ -42,6 +43,9 @@
 
         okButton.textContent = form.dataset.confirmButton || 'Verwijderen';
         cancelButton.textContent = form.dataset.confirmCancel || 'Annuleren';
+        const neutral = form.dataset.confirmTone === 'neutral';
+        dialog.classList.toggle('confirm-dialog-neutral', neutral);
+        okButton.classList.toggle('button-danger-solid', ! neutral);
         dialog.dispatchEvent(new CustomEvent('confirm:open', { detail: { form } }));
         dialog.returnValue = '';
         dialog.showModal();

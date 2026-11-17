@@ -41,13 +41,16 @@ class ActivityField extends Model
      *
      * @return array<int, mixed>
      */
-    public function rules(): array
+    public function rules(bool $optional = false): array
     {
+        // Organisers adding someone manually may not know every answer: then nothing is required.
+        $required = $this->required && ! $optional;
+
         if ($this->type === 'checkbox') {
-            return $this->required ? ['accepted'] : ['nullable', 'boolean'];
+            return $required ? ['accepted'] : ['nullable', 'boolean'];
         }
 
-        $rules = [$this->required ? 'required' : 'nullable'];
+        $rules = [$required ? 'required' : 'nullable'];
 
         return [...$rules, ...match ($this->type) {
             'textarea' => ['string', 'max:5000'],

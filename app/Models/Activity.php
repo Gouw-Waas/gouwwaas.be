@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -18,7 +19,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $ends_at
  * @property Carbon $registration_deadline
  */
-#[Fillable(['title', 'description', 'location', 'starts_at', 'ends_at', 'registration_deadline', 'price_cents'])]
+#[Fillable(['title', 'description', 'location', 'starts_at', 'ends_at', 'registration_deadline', 'price_cents', 'capacity'])]
 class Activity extends Model
 {
     /** @use HasFactory<ActivityFactory> */
@@ -142,6 +143,42 @@ class Activity extends Model
             ->orWhere(fn (Builder $q) => $q->whereNull('ends_at')->where('starts_at', '<', $cutoff->copy()->subDay())));
     }
 
+    /**
+     * Places taken: participants, plus payments in progress (see Registration::scopeTakingPlace).
+     */
+    public function takenPlaces(): int
+    {
+        return $this->registrations()->takingPlace()->count();
+    }
+
+    /**
+     * Places left, or null when there is no maximum.
+     */
+    public function placesLeft(): ?int
+    {
+        return $this->capacity === null ? null : max(0, $this->capacity - $this->takenPlaces());
+    }
+
+    public function isFull(): bool
+    {
+        return $this->placesLeft() === 0;
+    }
+
+    /**
+     * "Nog 3 plaatsen", "Nog 1 plaats" or "Volzet"; null without a maximum.
+     */
+    public function placesLabel(): ?string
+    {
+        $left = $this->placesLeft();
+
+        return match (true) {
+            $left === null => null,
+            $left === 0 => 'Volzet',
+            $left === 1 => 'Nog 1 plaats',
+            default => "Nog {$left} plaatsen",
+        };
+    }
+
     public function isRegistrationOpen(): bool
     {
         return now()->lte($this->registration_deadline);
@@ -249,5 +286,38 @@ class Activity extends Model
             ->map(fn (array $answer) => ['id' => $answer['field_id'], 'label' => $answer['label'].' (verwijderd veld)']);
 
         return $columns->concat($removed)->values();
+    }
+
+    /**
+     * Validate a registration (name, e-mail and the activity's own questions).
+     *
+     * @param  bool  $optional  organisers adding someone by hand: the questions aren't required
+     * @return array{name: string, email: string, answers: list<array{field_id: int, label: string, value: string}>}
+     */
+    public function validateRegistration(Request $request, bool $optional = false): array
+    {
+        $rules = ['name' => ['required', 'string', 'max:255'], 'email' => ['required', 'email', 'max:255']];
+        $attributes = ['name' => 'naam', 'email' => 'e-mailadres'];
+
+        foreach ($this->fields as $field) {
+            $rules["answers.{$field->id}"] = $field->rules($optional);
+            $attributes["answers.{$field->id}"] = '"'.$field->label.'"';
+        }
+
+        $validated = $request->validate($rules, [
+            'answers.*.accepted' => 'Vink :attribute aan.',
+            'answers.*.in' => 'Kies een geldige waarde voor :attribute.',
+        ], $attributes);
+
+        return [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            // Label stored along with the answer: renaming or removing a field later keeps it readable.
+            'answers' => $this->fields->map(fn (ActivityField $field) => [
+                'field_id' => $field->id,
+                'label' => $field->label,
+                'value' => $field->present($validated['answers'][$field->id] ?? null),
+            ])->values()->all(),
+        ];
     }
 }

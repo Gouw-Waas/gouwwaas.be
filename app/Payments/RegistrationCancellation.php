@@ -40,7 +40,8 @@ class RegistrationCancellation
 
         $refunded = 0;
 
-        if ($registration->payment_status === 'paid') {
+        // Only what went through Mollie is refunded through Mollie; manual payments are settled by hand.
+        if ($registration->paidOnline()) {
             $refunded = $registration->amount_cents - max(0, $adminCostCents);
 
             if ($refunded <= 0 || $refunded > $registration->amount_cents) {

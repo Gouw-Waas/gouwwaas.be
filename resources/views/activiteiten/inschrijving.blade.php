@@ -25,14 +25,29 @@
                         <div>
                             <h2>Bedankt {{ $registration->name }}!</h2>
                             <p>
-                                @unless ($registration->isFree())
+                                @if ($registration->isPaid() && ! $registration->paid_manually)
                                     Je betaling van {{ $registration->amountLabel() }} is gelukt.
-                                @endunless
+                                @endif
                                 Je inschrijving voor <strong>{{ $activity->title }}</strong> is in orde.
                                 @if ($registration->confirmation_sent_at)
                                     We stuurden een bevestiging naar <strong>{{ $registration->email }}</strong>.
                                 @endif
                             </p>
+                            @php($calendar = \App\Support\ActivityCalendar::for($activity))
+                            <div class="calendar-links">
+                                <p class="calendar-links-title">Zet in je agenda</p>
+                                <div class="calendar-buttons">
+                                    <a href="{{ $calendar->googleUrl() }}" target="_blank" rel="noopener" class="button button-ghost button-small calendar-button">
+                                        <img src="{{ asset('images/agenda/google.svg') }}" alt="" width="20" height="20"> Google Agenda
+                                    </a>
+                                    <a href="{{ $calendar->outlookUrl() }}" target="_blank" rel="noopener" class="button button-ghost button-small calendar-button">
+                                        <img src="{{ asset('images/agenda/outlook.svg') }}" alt="" width="20" height="20"> Outlook
+                                    </a>
+                                    <a href="{{ $calendar->icsUrl() }}" class="button button-ghost button-small calendar-button">
+                                        <img src="{{ asset('images/agenda/ics.svg') }}" alt="" width="20" height="20"> Apple / andere (.ics)
+                                    </a>
+                                </div>
+                            </div>
                             <p class="small">
                                 Toch verhinderd? Annuleren kan niet online: stuur een mail naar
                                 <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>.
@@ -83,7 +98,9 @@
                         <p class="lead checkout-intro">Nog één stap: controleer je gegevens en betaal online om je inschrijving af te ronden.</p>
                     @endif
 
-                    @if ($activity->isRegistrationOpen())
+                    @if ($activity->isRegistrationOpen() && $activity->isFull() && ! in_array($registration->payment_status, \App\Models\Registration::IN_PROGRESS_STATUSES, true))
+                        <p class="flash flash-error" role="alert">Deze activiteit is intussen volzet. Er is niets aangerekend.</p>
+                    @elseif ($activity->isRegistrationOpen())
                         <form method="POST" action="{{ route('inschrijvingen.betalen', $registration) }}" class="checkout-pay">
                             @csrf
                             @php($payLabel = $registration->payment_status === 'open' ? 'Verder betalen' : ($registration->paymentFailed() ? 'Opnieuw proberen' : 'Betalen'))
@@ -109,7 +126,7 @@
                     @endforeach
                 </dl>
                 <p class="checkout-total">
-                    <span>{{ $registration->isFree() ? 'Prijs' : ($registration->isConfirmed() ? 'Betaald' : 'Te betalen') }}</span>
+                    <span>{{ $registration->isFree() ? 'Prijs' : ($registration->isPaid() ? 'Betaald' : 'Te betalen') }}</span>
                     <strong>{{ $registration->isFree() ? 'Gratis' : $registration->amountLabel() }}</strong>
                 </p>
             </aside>

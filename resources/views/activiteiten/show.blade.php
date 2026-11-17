@@ -26,6 +26,12 @@
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                     <span>Inschrijven tot {{ $activity->registration_deadline->translatedFormat('l j F Y, H:i') }}</span>
                 </li>
+                @if ($activity->capacity)
+                    <li>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span><span class="visually-hidden">Plaatsen: </span>{{ $activity->isFull() ? 'Volzet' : $activity->placesLabel().' (van '.$activity->capacity.')' }}</span>
+                    </li>
+                @endif
             </ul>
 
             @can('update', $activity)
@@ -52,6 +58,8 @@
 
                 @if (! $activity->isRegistrationOpen())
                     <p class="muted">De inschrijvingen voor deze activiteit zijn afgesloten.</p>
+                @elseif ($activity->isFull())
+                    <p class="muted">Deze activiteit is volzet: er kan niemand meer bij.</p>
                 @else
                     <form method="POST" action="{{ route('activiteiten.inschrijven', $activity) }}" class="form">
                         @csrf
@@ -72,41 +80,7 @@
                             @enderror
                         </div>
 
-                        @foreach ($activity->fields as $field)
-                            @php($name = "answers[{$field->id}]")
-                            @php($key = "answers.{$field->id}")
-                            @php($id = "field-{$field->id}")
-
-                            <div class="field">
-                                @if ($field->type === 'checkbox')
-                                    <label class="checkbox">
-                                        <input id="{{ $id }}" type="checkbox" name="{{ $name }}" value="1" @checked(old($key)) @required($field->required) @error($key) aria-invalid="true" aria-describedby="{{ $id }}-error" @enderror>
-                                        <span>{{ $field->label }} @if ($field->required)<span class="required" aria-hidden="true">*</span>@endif</span>
-                                    </label>
-                                @else
-                                    <label for="{{ $id }}">{{ $field->label }} @if ($field->required)<span class="required" aria-hidden="true">*</span>@endif</label>
-
-                                    @if ($field->type === 'textarea')
-                                        <textarea id="{{ $id }}" name="{{ $name }}" rows="4" maxlength="5000" @required($field->required) @error($key) aria-invalid="true" aria-describedby="{{ $id }}-error" @enderror>{{ old($key) }}</textarea>
-                                    @elseif ($field->type === 'select')
-                                        <select id="{{ $id }}" name="{{ $name }}" @required($field->required) @error($key) aria-invalid="true" aria-describedby="{{ $id }}-error" @enderror>
-                                            <option value="">Maak een keuze</option>
-                                            @foreach ($field->options ?? [] as $option)
-                                                <option value="{{ $option }}" @selected(old($key) === $option)>{{ $option }}</option>
-                                            @endforeach
-                                        </select>
-                                    @else
-                                        <input id="{{ $id }}" type="{{ $field->type }}" name="{{ $name }}" value="{{ old($key) }}"
-                                               @if ($field->type === 'number') step="any" inputmode="decimal" @endif
-                                               @required($field->required) @error($key) aria-invalid="true" aria-describedby="{{ $id }}-error" @enderror>
-                                    @endif
-                                @endif
-
-                                @error($key)
-                                    <p class="error" id="{{ $id }}-error">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        @endforeach
+                        @include('activiteiten._answer-fields', ['fields' => $activity->fields])
 
                         <p class="muted small"><span class="required" aria-hidden="true">*</span> verplicht</p>
                         <p class="muted small">Wat we met je gegevens doen, lees je in onze <a href="{{ route('privacy') }}">privacyverklaring</a>.</p>

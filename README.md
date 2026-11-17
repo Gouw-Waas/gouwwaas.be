@@ -118,7 +118,7 @@ address (`localhost`) no webhook is sent, because Mollie can't reach it. The e-m
 sent exactly once, and straight away (production has no queue worker). The price is
 stored with the registration, so a later price change doesn't change what was agreed.
 Organisers see the payment status per registration (overview and Excel); only paid and
-free registrations count. The code is in `app/Payments` (Mollie behind a
+free registrations (and those added by an organiser) count. The code is in `app/Payments` (Mollie behind a
 `PaymentGateway` interface, faked in the tests).
 
 **Cancelling and refunds.** Participants can't cancel themselves: the confirmation e-mail
@@ -132,6 +132,35 @@ and a cancellation e-mail without refund; registrations that were never paid are
 without e-mail. Deleting an activity refunds every paid registration in full and e-mails
 everyone; if a refund fails, the activity stays with just those registrations, so it can
 be retried. The code is in `app/Payments/RegistrationCancellation.php`.
+
+**Maximum number of participants.** An activity can have a maximum (empty = no limit).
+A place is taken by every participant (free, paid or added by an organiser) and by an
+online payment still in progress at Mollie, so two people can't pay for the last place at
+the same time; expired or failed payments free the place again. The activity list and
+page show the places left ("Nog 3 plaatsen", "Volzet"); a full activity hides the
+registration form, and a payment is refused (nothing charged) when someone else took the
+last place in the meantime. There is no waiting list.
+
+**Manual registrations.** Organisers and admins add people themselves with "Inschrijving
+toevoegen" (signed up by phone, on paper…): name and e-mail are required, the questions
+are optional. For a paid activity they choose "Betaald" (cash, transfer…) or "Nog niet
+betaald"; either way the person counts as a participant, optionally with a confirmation
+e-mail. They may go over the maximum (the form warns). "Op betaald zetten" in the
+overview marks a registration paid when the money came in outside the website, also for
+an online registration whose payment failed or expired (not while a Mollie payment is
+still running). Payments outside the website are never refunded through Mollie: when
+cancelling, the dialog says to settle the refund yourself.
+
+**Mailing participants.** "Deelnemers mailen" in the overview sends a message to every
+participant (optionally also to those who never finished paying), one e-mail per
+address so nobody sees the others' addresses. The activity's date, place and link are
+added below the message, replies go to the organiser who sent it, and they can get a
+copy. Sent straight away, like all mail (no queue worker).
+
+**Calendar.** The confirmation e-mail has the activity attached as a calendar file
+(`.ics`) and links for Google Calendar and Outlook.com; the registration's confirmation
+page has the same links. `/activiteiten/{slug}/agenda.ics` serves the file (public; an
+activity without an end lasts one day, as everywhere else). The code is in `app/Support/ActivityCalendar.php`.
 
 **Wie is wie.** Every function (`roles` table) has a category: `bureau`, `adjunct`
 or `district`. Admins see a "Bewerken" button on each function to change its
