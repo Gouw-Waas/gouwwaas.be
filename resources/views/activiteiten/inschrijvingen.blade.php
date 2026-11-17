@@ -101,6 +101,40 @@
                     </tbody>
                 </table>
             </div>
+
+            @unless ($activity->isFree() && $activity->registrations->every->isFree())
+                @php($revenue = $activity->revenue())
+                @php($count = fn (int $n) => $n === 1 ? '1 inschrijving' : "{$n} inschrijvingen")
+                <section class="card revenue" aria-labelledby="revenue-title">
+                    <h2 id="revenue-title">Financieel overzicht</h2>
+                    <dl class="revenue-lines">
+                        <div>
+                            <dt>Online betaald <span class="muted">({{ $count($revenue['online_count']) }})</span></dt>
+                            <dd>{{ \App\Models\Activity::euro($revenue['online']) }}</dd>
+                        </div>
+                        @if ($revenue['manual_count'])
+                            <div>
+                                <dt>Manueel betaald <span class="muted">({{ $count($revenue['manual_count']) }}, cash of overschrijving)</span></dt>
+                                <dd>{{ \App\Models\Activity::euro($revenue['manual']) }}</dd>
+                            </div>
+                        @endif
+                        <div class="revenue-total">
+                            <dt>Totale inkomsten</dt>
+                            <dd>{{ \App\Models\Activity::euro($revenue['total']) }}</dd>
+                        </div>
+                        @if ($revenue['outstanding_count'])
+                            <div class="revenue-outstanding">
+                                <dt>Nog te ontvangen <span class="muted">({{ $count($revenue['outstanding_count']) }}, manueel toegevoegd)</span></dt>
+                                <dd>{{ \App\Models\Activity::euro($revenue['outstanding']) }}</dd>
+                            </div>
+                        @endif
+                    </dl>
+                    <p class="hint">
+                        Online betalingen zijn de bedragen vóór de transactiekosten van Mollie. Geannuleerde inschrijvingen
+                        tellen niet mee (ook niet ingehouden administratiekosten).
+                    </p>
+                </section>
+            @endunless
         @endif
     </section>
 

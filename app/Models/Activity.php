@@ -238,6 +238,36 @@ class Activity extends Model
         };
     }
 
+    /**
+     * Money for the organisers' overview, in cents: paid online (Mollie) and paid outside the
+     * website (marked paid by an organiser), and what manual registrations still have to pay.
+     * Cancelled registrations are removed, so refunded money isn't counted.
+     *
+     * @return array{online: int, online_count: int, manual: int, manual_count: int, outstanding: int, outstanding_count: int, total: int}
+     */
+    public function revenue(): array
+    {
+        $registrations = $this->registrations;
+        $online = $registrations->filter(fn (Registration $registration) => $registration->paidOnline());
+        $manual = $registrations->filter(fn (Registration $registration) => $registration->isPaid() && $registration->paid_manually);
+        $outstanding = $registrations->filter(fn (Registration $registration) => $registration->isManual() && $registration->canBeMarkedPaid());
+
+        return [
+            'online' => (int) $online->sum('amount_cents'),
+            'online_count' => $online->count(),
+            'manual' => (int) $manual->sum('amount_cents'),
+            'manual_count' => $manual->count(),
+            'outstanding' => (int) $outstanding->sum('amount_cents'),
+            'outstanding_count' => $outstanding->count(),
+            'total' => (int) $online->sum('amount_cents') + (int) $manual->sum('amount_cents'),
+        ];
+    }
+
+    public static function euro(int $cents): string
+    {
+        return '€ '.number_format($cents / 100, 2, ',', '.');
+    }
+
     public function isRegistrationOpen(): bool
     {
         return now()->lte($this->registration_deadline);

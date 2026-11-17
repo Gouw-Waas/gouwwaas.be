@@ -161,6 +161,12 @@ an online registration whose payment failed or expired (not while a Mollie payme
 still running). Payments outside the website are never refunded through Mollie: when
 cancelling, the dialog says to settle the refund yourself.
 
+**Financial summary.** For paid activities the registrations overview ends with the
+revenue: paid online (Mollie, before Mollie's transaction costs), paid manually (only
+shown when there are manual payments), the total, and what manually added participants
+still have to pay. It counts the price each registration paid; cancelled registrations
+are removed, so refunds (and administrative costs kept back) are not in it.
+
 **Mailing participants.** "Deelnemers mailen" in the overview sends a message to every
 participant (optionally also to those who never finished paying), one e-mail per
 address so nobody sees the others' addresses. The activity's date, place and link are
