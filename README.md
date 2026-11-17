@@ -118,10 +118,17 @@ Organisers see the payment status per registration (overview and Excel); only pa
 free registrations count. The code is in `app/Payments` (Mollie behind a
 `PaymentGateway` interface, faked in the tests).
 
-Participants can't cancel themselves: the confirmation e-mail and page say to reply or
-write to the sender address. Deleting a registration (or an activity) never refunds
-anything: the confirmation dialog says so, with the amount and Mollie payment id, and
-refunds are done by hand in the Mollie dashboard.
+**Cancelling and refunds.** Participants can't cancel themselves: the confirmation e-mail
+and page say to reply or write to the sender address. Organisers cancel a registration
+with "Annuleren" in the overview. For a paid registration the dialog offers a full refund
+or a refund minus administrative costs (€ 1,00 by default, adjustable); the refund is
+requested through Mollie's refund API, the participant gets an e-mail that the money is
+coming back within a few business days, and only then is the registration removed (if
+Mollie refuses the refund, nothing is removed). Free registrations get an "are you sure"
+and a cancellation e-mail without refund; registrations that were never paid are removed
+without e-mail. Deleting an activity refunds every paid registration in full and e-mails
+everyone; if a refund fails, the activity stays with just those registrations, so it can
+be retried. The code is in `app/Payments/RegistrationCancellation.php`.
 
 **Wie is wie.** Every function (`roles` table) has a category: `bureau`, `adjunct`
 or `district`. Admins see a "Bewerken" button on each function to change its

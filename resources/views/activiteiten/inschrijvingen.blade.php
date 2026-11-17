@@ -27,6 +27,13 @@
     </section>
 
     <section class="container section">
+        @error('cancel')
+            <p class="flash flash-error" role="alert">{{ $message }}</p>
+        @enderror
+        @if ($errors->hasAny(['refund', 'admin_cost']))
+            <p class="flash flash-error" role="alert">{{ $errors->first('refund') ?: $errors->first('admin_cost') }}</p>
+        @endif
+
         @if ($activity->registrations->isEmpty())
             <div class="empty-state">
                 <p>Nog niemand ingeschreven.</p>
@@ -66,14 +73,7 @@
                                     <td>{{ $registration->answerFor($column['id']) }}</td>
                                 @endforeach
                                 <td class="nowrap">
-                                    <form method="POST" action="{{ route('activiteiten.inschrijvingen.destroy', [$activity, $registration]) }}"
-                                          data-confirm="Inschrijving van {{ $registration->name }} verwijderen?"
-                                          data-confirm-details="verwijder-inschrijving-{{ $registration->id }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="button button-danger button-small">Verwijderen</button>
-                                    </form>
-                                    @include('activiteiten._delete-registration-warning', ['registration' => $registration])
+                                    @include('activiteiten._cancel-registration', ['registration' => $registration])
                                 </td>
                             </tr>
                         @endforeach
@@ -82,4 +82,39 @@
             </div>
         @endif
     </section>
+
+    <script>
+        // Refund dialog: show what will be refunded, minus the administrative costs when chosen.
+        // After DOMContentLoaded: the dialog is in the layout, below this content.
+        document.addEventListener('DOMContentLoaded', () => {
+            const dialog = document.querySelector('[data-confirm-dialog]');
+            if (! dialog) return;
+            const euro = (cents) => '€ ' + (cents / 100).toLocaleString('nl-BE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const update = () => {
+                const box = dialog.querySelector('[data-refund]');
+                if (! box) return;
+                const amount = Number(box.dataset.refundAmount);
+                const minusCosts = box.querySelector('input[value=minus_costs]').checked;
+                const costInput = box.querySelector('[data-refund-cost]');
+                const cost = Math.round(parseFloat(costInput.value.replace(',', '.')) * 100);
+                const valid = ! minusCosts || (Number.isFinite(cost) && cost >= 0 && cost < amount);
+
+                box.querySelector('[data-refund-total]').textContent = valid ? euro(minusCosts ? amount - cost : amount) : 'ongeldig bedrag';
+                costInput.toggleAttribute('aria-invalid', ! valid);
+                dialog.querySelector('[data-confirm-ok]').disabled = ! valid;
+            };
+
+            dialog.addEventListener('input', update);
+            dialog.addEventListener('change', update);
+            dialog.addEventListener('confirm:open', () => requestAnimationFrame(update));
+            // Typing in the costs field picks that option.
+            dialog.addEventListener('focusin', (event) => {
+                if (event.target.matches('[data-refund-cost]')) {
+                    event.target.closest('[data-refund]').querySelector('input[value=minus_costs]').checked = true;
+                    update();
+                }
+            });
+        });
+    </script>
 @endsection

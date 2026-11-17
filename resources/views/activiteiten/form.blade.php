@@ -149,18 +149,27 @@
                 $paid = $activity->registrations()->where('payment_status', 'paid');
                 $paidCount = $paid->count();
                 $paidTotal = $paid->sum('amount_cents');
+                $confirmedCount = $activity->registrations()->confirmed()->count();
             @endphp
+            @error('cancel')
+                <p class="flash flash-error" role="alert">{{ $message }}</p>
+            @enderror
             <template id="verwijder-activiteit">
                 @if ($paidCount)
                     <div class="confirm-warning">
-                        <strong class="confirm-warning-title">{{ $paidCount }} {{ $paidCount === 1 ? 'deelnemer heeft' : 'deelnemers hebben' }} samen € {{ number_format($paidTotal / 100, 2, ',', '.') }} betaald.</strong>
-                        <p>Verwijderen betaalt niets terug: het geld blijft bij Mollie staan. Terugbetalen doe je zelf in het Mollie-dashboard; Mollie kan daar kosten voor aanrekenen.</p>
+                        <strong class="confirm-warning-title">ALLE betaalde inschrijvingen worden volledig terugbetaald.</strong>
+                        <p>{{ $paidCount }} {{ $paidCount === 1 ? 'deelnemer krijgt' : 'deelnemers krijgen' }} samen € {{ number_format($paidTotal / 100, 2, ',', '.') }} teruggestort via Mollie, zonder administratiekosten.</p>
                     </div>
                 @endif
-                <p>De activiteit en alle {{ $activity->registrations_count }} inschrijvingen verdwijnen definitief. Deelnemers krijgen geen bericht.</p>
+                @if ($confirmedCount)
+                    <p>{{ $paidCount ? 'Alle' : 'Ben je zeker? Alle' }} {{ $confirmedCount }} {{ $confirmedCount === 1 ? 'deelnemer krijgt' : 'deelnemers krijgen' }} een e-mail dat de activiteit niet doorgaat{{ $paidCount ? ' en dat het geld binnen enkele werkdagen teruggestort wordt' : '' }}. Daarna verdwijnt de activiteit definitief.</p>
+                @else
+                    <p>Ben je zeker? Er zijn geen inschrijvingen, de activiteit verdwijnt definitief.</p>
+                @endif
             </template>
             <form method="POST" action="{{ route('activiteiten.destroy', $activity) }}" class="danger-zone"
-                  data-confirm="&quot;{{ $activity->title }}&quot; verwijderen?" data-confirm-details="verwijder-activiteit">
+                  data-confirm="&quot;{{ $activity->title }}&quot; verwijderen?" data-confirm-details="verwijder-activiteit"
+                  data-confirm-button="{{ $paidCount ? 'Verwijderen en terugbetalen' : 'Activiteit verwijderen' }}" data-confirm-cancel="Terug">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="button button-danger">Activiteit verwijderen</button>

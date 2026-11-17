@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\ActivityField;
 use App\Models\Registration;
+use App\Payments\CancellationException;
+use App\Payments\PaymentException;
+use App\Payments\RegistrationCancellation;
 use App\Payments\RegistrationCheckout;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -130,12 +133,51 @@ class RegistrationController extends Controller
         }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
     }
 
-    public function destroy(Activity $activity, Registration $registration): RedirectResponse
+    /**
+     * Cancel a registration: paid ones are refunded (in full, or minus administrative costs),
+     * and everyone who was registered gets an e-mail.
+     */
+    public function destroy(Request $request, Activity $activity, Registration $registration, RegistrationCancellation $cancellation): RedirectResponse
     {
         Gate::authorize('viewRegistrations', $activity);
 
-        $registration->delete();
+        $adminCost = 0;
 
-        return back()->with('status', "De inschrijving van {$registration->name} is verwijderd.");
+        if ($registration->payment_status === 'paid') {
+            $request->merge(['admin_cost' => str_replace(',', '.', trim((string) $request->input('admin_cost', '0')))]);
+            $validated = $request->validate([
+                'refund' => ['required', 'in:full,minus_costs'],
+                'admin_cost' => ['required_if:refund,minus_costs', 'nullable', 'numeric', 'min:0', 'decimal:0,2'],
+            ], [
+                'refund.required' => 'Kies hoe er terugbetaald wordt.',
+                'admin_cost.numeric' => 'Vul de administratiekosten in als bedrag, bv. 1 of 1,50.',
+                'admin_cost.decimal' => 'Vul de administratiekosten in als bedrag, bv. 1 of 1,50.',
+            ]);
+
+            if ($validated['refund'] === 'minus_costs') {
+                $adminCost = (int) round((float) $validated['admin_cost'] * 100);
+
+                if ($adminCost >= $registration->amount_cents) {
+                    return back()->withErrors(['cancel' => 'De administratiekosten moeten lager zijn dan het betaalde bedrag ('.$registration->amountLabel().').']);
+                }
+            }
+        }
+
+        try {
+            $refunded = $cancellation->cancel($registration, $adminCost);
+        } catch (CancellationException $e) {
+            return back()->withErrors(['cancel' => $e->getMessage()]);
+        } catch (PaymentException $e) {
+            report($e);
+
+            return back()->withErrors(['cancel' => "De terugbetaling aan {$registration->name} lukte niet, dus de inschrijving is niet geannuleerd. Kijk in het Mollie-dashboard of er genoeg saldo is en probeer opnieuw."]);
+        }
+
+        $status = "De inschrijving van {$registration->name} is geannuleerd.";
+        if ($refunded) {
+            $status .= ' De terugbetaling van € '.number_format($refunded / 100, 2, ',', '.').' wordt verwerkt.';
+        }
+
+        return back()->with('status', $status);
     }
 }

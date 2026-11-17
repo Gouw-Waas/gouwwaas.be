@@ -50,7 +50,8 @@
 
     {{-- Floats above the page and fades out after 3 seconds (CSS only); hovering pauses it. --}}
     @if (session('status'))
-        <div class="toast" role="status">
+        {{-- Long messages (e.g. about refunds) stay longer, so there's time to read them. --}}
+        <div @class(['toast', 'toast-long' => mb_strlen(session('status')) > 90]) role="status">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
             <span>{{ session('status') }}</span>
             <button type="button" class="toast-close" aria-label="Melding sluiten" onclick="this.parentElement.remove()">×</button>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activity;
 use App\Models\ActivityField;
+use App\Payments\RegistrationCancellation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,15 +15,44 @@ use Illuminate\View\View;
 
 class ActivityController extends Controller
 {
+    /**
+     * Past activities are only listed for admins, who can archive them.
+     */
     public function index(Request $request): View
     {
+        $isAdmin = (bool) $request->user()?->is_admin;
+
         return view('activiteiten.index', [
             'upcoming' => Activity::upcoming()->orderBy('starts_at')->get(),
-            'past' => Activity::past()->orderByDesc('starts_at')->limit(6)->get(),
+            'past' => $isAdmin
+                ? Activity::past()->withCount('registrations')->orderByDesc('starts_at')->get()
+                : collect(),
             'mine' => $request->user()
-                ? $request->user()->activities()->withCount('registrations')->orderByDesc('starts_at')->get()
+                ? $request->user()->activities()
+                    ->unless($isAdmin, fn ($query) => $query->upcoming())
+                    ->withCount('registrations')
+                    ->orderByDesc('starts_at')
+                    ->get()
                 : collect(),
         ]);
+    }
+
+    /**
+     * Admins: permanently delete a past activity and its registrations. Nothing is refunded and
+     * nobody is e-mailed (unlike deleting an upcoming activity).
+     */
+    public function archive(Activity $activity): RedirectResponse
+    {
+        if (! $activity->isPast()) {
+            return redirect()->route('activiteiten.index')
+                ->withErrors(['archive' => "\"{$activity->title}\" is nog niet voorbij en kan dus niet gearchiveerd worden."]);
+        }
+
+        $count = $activity->registrations()->count();
+        $activity->delete(); // registrations go with it (cascade)
+
+        return redirect()->route('activiteiten.index')->with('status',
+            "\"{$activity->title}\" is gearchiveerd: de activiteit en {$count} ".($count === 1 ? 'inschrijving zijn' : 'inschrijvingen zijn').' definitief verwijderd.');
     }
 
     public function show(Activity $activity): View
@@ -74,13 +104,35 @@ class ActivityController extends Controller
         return redirect()->route('activiteiten.show', $activity)->with('status', 'De activiteit is bijgewerkt.');
     }
 
-    public function destroy(Activity $activity): RedirectResponse
+    /**
+     * Delete the activity: every paid registration is refunded in full and everyone who was
+     * registered gets a cancellation e-mail. If some refunds fail, the activity stays with
+     * just those registrations, so deleting can be tried again.
+     */
+    public function destroy(Activity $activity, RegistrationCancellation $cancellation): RedirectResponse
     {
         Gate::authorize('delete', $activity);
 
-        $activity->delete();
+        $result = $cancellation->cancelActivity($activity);
 
-        return redirect()->route('activiteiten.index')->with('status', "\"{$activity->title}\" is verwijderd.");
+        if ($result['failed']) {
+            return redirect()->route('activiteiten.edit', $activity)->withErrors(['cancel' =>
+                'De activiteit is niet verwijderd: voor '.implode(', ', $result['failed']).' lukte de terugbetaling niet '
+                .'(of wordt een betaling nog verwerkt). De andere deelnemers zijn wel terugbetaald en verwittigd. '
+                .'Kijk in het Mollie-dashboard of er genoeg saldo is en probeer opnieuw.',
+            ]);
+        }
+
+        $status = "\"{$activity->title}\" is verwijderd.";
+        if ($result['cancelled']) {
+            $status .= " {$result['cancelled']} ".($result['cancelled'] === 1 ? 'deelnemer kreeg' : 'deelnemers kregen').' een annuleringsmail';
+            $status .= '.';
+            if ($result['refunded']) {
+                $status .= ' De terugbetalingen (samen € '.number_format($result['refunded'] / 100, 2, ',', '.').') worden verwerkt.';
+            }
+        }
+
+        return redirect()->route('activiteiten.index')->with('status', $status);
     }
 
     /**

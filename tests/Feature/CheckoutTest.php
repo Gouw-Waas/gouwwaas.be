@@ -265,36 +265,6 @@ class CheckoutTest extends TestCase
         $this->assertSame('Niet betaald', $olga[3]);
     }
 
-    public function test_deleting_a_paid_registration_warns_that_nothing_is_refunded(): void
-    {
-        $activity = $this->paidActivity();
-        $paid = $this->register($activity, ['name' => 'Betaalde Bert']);
-        $this->post("/inschrijvingen/{$paid->token}/betalen");
-        $this->gateway->statuses['tr_test1'] = 'paid';
-        $this->get("/inschrijvingen/{$paid->token}");
-        $free = Activity::factory()->create();
-        $other = $this->register($free, ['name' => 'Gratis Greet']);
-
-        $this->actingAs($activity->user)
-            ->get("/activiteiten/{$activity->slug}/inschrijvingen")
-            ->assertSee('data-confirm="Inschrijving van Betaalde Bert verwijderen?"', false)
-            ->assertSee('Betaalde Bert heeft € 12,50 betaald.')
-            ->assertSee('niet</strong> terug', false)
-            ->assertSee('betaling tr_test1')
-            ->assertDontSee('return confirm(', false);
-
-        $this->actingAs($free->user)
-            ->get("/activiteiten/{$free->slug}/inschrijvingen")
-            ->assertSee('Inschrijving van Gratis Greet verwijderen?')
-            ->assertDontSee('betaald.');
-
-        // The activity's delete dialog mentions the money too.
-        $this->actingAs($activity->user)
-            ->get("/activiteiten/{$activity->slug}/bewerken")
-            ->assertSee('1 deelnemer heeft samen € 12,50 betaald.')
-            ->assertSee('Verwijderen betaalt niets terug');
-    }
-
     public function test_the_confirmation_mail(): void
     {
         $activity = $this->paidActivity(['location' => 'Gouwhuis Karree']);

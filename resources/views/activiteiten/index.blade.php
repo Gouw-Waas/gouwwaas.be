@@ -13,6 +13,10 @@
     </section>
 
     <section class="container section">
+        @error('archive')
+            <p class="flash flash-error" role="alert">{{ $message }}</p>
+        @enderror
+
         @if ($upcoming->isEmpty())
             <div class="empty-state">
                 <p>Er staan momenteel geen activiteiten gepland. Kom binnenkort nog eens kijken!</p>
@@ -52,14 +56,29 @@
         </section>
     @endif
 
+    {{-- Only for admins: past activities, with the option to archive (delete permanently). --}}
     @if ($past->isNotEmpty())
         <section class="container section">
             <div class="section-heading">
                 <h2>Voorbije activiteiten</h2>
+                <p>Alleen zichtbaar voor beheerders. Archiveren verwijdert een activiteit en haar inschrijvingen definitief.</p>
             </div>
             <div class="activity-list activity-list-past">
                 @foreach ($past as $activity)
-                    @include('activiteiten._card', ['activity' => $activity])
+                    <div class="activity-archive-row">
+                        @include('activiteiten._card', ['activity' => $activity])
+                        <form method="POST" action="{{ route('activiteiten.archive', $activity) }}"
+                              data-confirm="&quot;{{ $activity->title }}&quot; archiveren?"
+                              data-confirm-text="{{ match ($activity->registrations_count) {
+                                  0 => 'De activiteit wordt definitief verwijderd. Er zijn geen inschrijvingen.',
+                                  1 => 'De activiteit en de enige inschrijving worden definitief verwijderd. Er wordt niets terugbetaald en niemand krijgt een e-mail.',
+                                  default => "De activiteit en alle {$activity->registrations_count} inschrijvingen worden definitief verwijderd. Er wordt niets terugbetaald en niemand krijgt een e-mail.",
+                              } }}"
+                              data-confirm-button="Archiveren" data-confirm-cancel="Terug">
+                            @csrf
+                            <button type="submit" class="button button-danger button-small">Archiveren</button>
+                        </form>
+                    </div>
                 @endforeach
             </div>
         </section>

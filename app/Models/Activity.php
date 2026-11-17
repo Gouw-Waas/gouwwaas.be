@@ -63,20 +63,26 @@ class Activity extends Model
     }
 
     /**
-     * Activities that haven't finished yet (today's activities still count).
+     * Activities that aren't over yet. An activity is over once its end has passed, or, without
+     * an end, one day after its start.
      */
     public function scopeUpcoming(Builder $query): void
     {
         $query->where(fn (Builder $q) => $q
-            ->where('ends_at', '>=', today())
-            ->orWhere(fn (Builder $q) => $q->whereNull('ends_at')->where('starts_at', '>=', today())));
+            ->where('ends_at', '>=', now())
+            ->orWhere(fn (Builder $q) => $q->whereNull('ends_at')->where('starts_at', '>=', now()->subDay())));
     }
 
     public function scopePast(Builder $query): void
     {
         $query->where(fn (Builder $q) => $q
-            ->where('ends_at', '<', today())
-            ->orWhere(fn (Builder $q) => $q->whereNull('ends_at')->where('starts_at', '<', today())));
+            ->where('ends_at', '<', now())
+            ->orWhere(fn (Builder $q) => $q->whereNull('ends_at')->where('starts_at', '<', now()->subDay())));
+    }
+
+    public function isPast(): bool
+    {
+        return ($this->ends_at ?? $this->starts_at->copy()->addDay())->isPast();
     }
 
     public function isRegistrationOpen(): bool

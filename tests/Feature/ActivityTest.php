@@ -30,14 +30,81 @@ class ActivityTest extends TestCase
         ];
     }
 
-    public function test_upcoming_and_past_activities_are_listed(): void
+    public function test_past_activities_are_only_listed_for_admins(): void
     {
         $upcoming = Activity::factory()->create(['title' => 'Komende activiteit']);
         $past = Activity::factory()->past()->create(['title' => 'Voorbije activiteit']);
 
+        $this->get('/activiteiten')->assertOk()->assertSee($upcoming->title)->assertDontSee($past->title)->assertDontSee('Voorbije activiteiten');
+
+        // Not even for the organiser of the past activity, in "Mijn activiteiten".
+        $this->actingAs($past->user)->get('/activiteiten')->assertDontSee($past->title);
+
+        $this->actingAs(User::factory()->create(['is_admin' => true]))->get('/activiteiten')
+            ->assertSeeInOrder([$upcoming->title, 'Voorbije activiteiten', $past->title])
+            ->assertSee('data-confirm="&quot;Voorbije activiteit&quot; archiveren?"', false)
+            ->assertSee('De activiteit wordt definitief verwijderd. Er zijn geen inschrijvingen.');
+
+        $past->registrations()->create(['name' => 'Ann', 'email' => 'ann@example.com', 'answers' => []]);
+        $past->registrations()->create(['name' => 'Bert', 'email' => 'bert@example.com', 'answers' => []]);
         $this->get('/activiteiten')
-            ->assertOk()
-            ->assertSeeInOrder([$upcoming->title, 'Voorbije activiteiten', $past->title]);
+            ->assertSee('De activiteit en alle 2 inschrijvingen worden definitief verwijderd. Er wordt niets terugbetaald en niemand krijgt een e-mail.');
+    }
+
+    public function test_when_an_activity_is_past(): void
+    {
+        $this->travelTo(now()->setTime(12, 0));
+
+        $endedJustNow = Activity::factory()->create(['starts_at' => now()->subHours(3), 'ends_at' => now()->subMinute(), 'registration_deadline' => now()->subDay()]);
+        $endsSoon = Activity::factory()->create(['starts_at' => now()->subHours(3), 'ends_at' => now()->addMinute(), 'registration_deadline' => now()->subDay()]);
+        // Without an end: over one day after the start.
+        $startedYesterdayNoon = Activity::factory()->create(['starts_at' => now()->subDay()->subMinute(), 'ends_at' => null, 'registration_deadline' => now()->subDays(2)]);
+        $startedThisMorning = Activity::factory()->create(['starts_at' => now()->subHours(23), 'ends_at' => null, 'registration_deadline' => now()->subDays(2)]);
+
+        $this->assertTrue($endedJustNow->isPast());
+        $this->assertFalse($endsSoon->isPast());
+        $this->assertTrue($startedYesterdayNoon->isPast());
+        $this->assertFalse($startedThisMorning->isPast());
+
+        $this->assertEqualsCanonicalizing([$endedJustNow->id, $startedYesterdayNoon->id], Activity::past()->pluck('id')->all());
+        $this->assertEqualsCanonicalizing([$endsSoon->id, $startedThisMorning->id], Activity::upcoming()->pluck('id')->all());
+    }
+
+    public function test_admins_archive_a_past_activity_without_refunds_or_mails(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $gateway = new \Tests\Fakes\FakePaymentGateway;
+        $this->app->instance(\App\Payments\PaymentGateway::class, $gateway);
+
+        $past = Activity::factory()->past()->create(['title' => 'Oud weekend', 'price_cents' => 1000]);
+        $paid = $past->registrations()->create(['name' => 'Bert', 'email' => 'bert@example.com', 'answers' => [], 'amount_cents' => 1000]);
+        $paid->forceFill(['payment_status' => 'paid', 'mollie_payment_id' => 'tr_bert'])->save();
+        $past->registrations()->create(['name' => 'Ann', 'email' => 'ann@example.com', 'answers' => [], 'amount_cents' => 1000]);
+
+        $this->actingAs(User::factory()->create(['is_admin' => true]))
+            ->post("/activiteiten/{$past->slug}/archiveren")
+            ->assertRedirect('/activiteiten')
+            ->assertSessionHas('status', '"Oud weekend" is gearchiveerd: de activiteit en 2 inschrijvingen zijn definitief verwijderd.');
+
+        $this->assertModelMissing($past);
+        $this->assertModelMissing($paid);
+        $this->assertSame([], $gateway->refunds);
+        \Illuminate\Support\Facades\Mail::assertNothingSent();
+    }
+
+    public function test_only_admins_archive_and_only_past_activities(): void
+    {
+        $past = Activity::factory()->past()->create();
+        $upcoming = Activity::factory()->create();
+
+        $this->post("/activiteiten/{$past->slug}/archiveren")->assertRedirect('/login');
+        $this->actingAs($past->user)->post("/activiteiten/{$past->slug}/archiveren")->assertForbidden();
+        $this->assertModelExists($past);
+
+        $this->actingAs(User::factory()->create(['is_admin' => true]))
+            ->post("/activiteiten/{$upcoming->slug}/archiveren")
+            ->assertSessionHasErrors('archive');
+        $this->assertModelExists($upcoming);
     }
 
     public function test_guests_cannot_create_activities(): void

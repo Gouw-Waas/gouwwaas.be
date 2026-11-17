@@ -44,6 +44,26 @@ class FakePaymentGateway implements PaymentGateway
         return ($this->statuses[$paymentId] ?? null) === 'open' ? "https://mollie.test/checkout/{$paymentId}" : null;
     }
 
+    /** @var array<int, array{id: string, payment: string, amount: int, description: string}> */
+    public array $refunds = [];
+
+    /** @var array<int, string> payment ids whose refund is refused */
+    public array $refusedRefunds = [];
+
+    public function refund(string $paymentId, int $amountCents, string $description): string
+    {
+        $this->failIfNeeded();
+
+        if (in_array($paymentId, $this->refusedRefunds, true)) {
+            throw new PaymentException("Refund refused for {$paymentId} (fake: not enough balance).");
+        }
+
+        $id = 're_test'.(count($this->refunds) + 1);
+        $this->refunds[] = ['id' => $id, 'payment' => $paymentId, 'amount' => $amountCents, 'description' => $description];
+
+        return $id;
+    }
+
     private function failIfNeeded(): void
     {
         if ($this->failing) {

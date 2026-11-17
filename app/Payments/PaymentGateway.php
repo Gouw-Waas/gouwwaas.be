@@ -29,4 +29,11 @@ interface PaymentGateway
      * @throws PaymentException
      */
     public function checkoutUrl(string $paymentId): ?string;
+
+    /**
+     * Refund (part of) a paid payment; returns the refund's id.
+     *
+     * @throws PaymentException when the refund is refused (e.g. not enough balance)
+     */
+    public function refund(string $paymentId, int $amountCents, string $description): string;
 }

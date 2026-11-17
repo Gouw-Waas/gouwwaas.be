@@ -79,6 +79,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/gebruikers/{gebruiker}/wachtwoord-reset', [UserController::class, 'forcePasswordReset'])
             ->name('gebruikers.wachtwoord-reset');
 
+        // Past activities: delete permanently, without refunds or e-mails.
+        Route::post('/activiteiten/{activity}/archiveren', [ActivityController::class, 'archive'])->name('activiteiten.archive');
+
         // District logos and scouting groups on the map (/districten).
         Route::get('/districten/{district}/bewerken', [DistrictController::class, 'edit'])->name('districten.edit');
         Route::put('/districten/{district}', [DistrictController::class, 'update'])->name('districten.update');

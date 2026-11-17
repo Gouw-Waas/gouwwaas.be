@@ -348,6 +348,7 @@ a:hover { color: var(--olive-dark); }
 }
 
 .toast:hover { animation-play-state: paused; }
+.toast.toast-long { animation-delay: 0s, 7s; }
 .toast svg { flex: none; color: var(--lime); }
 
 .toast-close {
@@ -1061,7 +1062,17 @@ a.group-row:hover .group-name { color: var(--olive); }
     gap: 16px;
 }
 
-.activity-list-past { opacity: .75; }
+.activity-list-past .activity-card { opacity: .75; }
+
+/* Past activity with the admins' "Archiveren" button next to it */
+.activity-archive-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+}
+
+.activity-archive-row form { margin: 0; }
 
 .activity-card {
     display: flex;
@@ -1260,6 +1271,50 @@ a.group-row:hover .group-name { color: var(--olive); }
 
 .button-danger-solid { background: var(--red); border-color: var(--red); color: #fff; }
 .button-danger-solid:hover { background: #b8081a; border-color: #b8081a; color: #fff; }
+
+/* Refund choice in the cancel dialog */
+.refund-options {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.refund-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--ink);
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.refund-option:has(input[type=radio]:checked) { border-color: var(--olive); background: var(--lime-light); }
+.refund-option input[type=radio] { flex: none; width: 20px; height: 20px; margin-top: 2px; accent-color: var(--olive); }
+.refund-option > span { display: grid; gap: 2px; min-width: 0; }
+
+.refund-cost {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: .9375rem;
+}
+
+.refund-cost .input-prefix { width: 120px; }
+.refund-cost input { min-height: 40px; padding-top: 6px; padding-bottom: 6px; }
+
+.refund-total { margin: 4px 0 0; color: var(--ink); }
+.refund-total strong { font-family: var(--font-heading); font-size: 1.25rem; }
+
+.confirm-actions .button:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Form-field builder */
 .field-builder {
@@ -1608,6 +1663,8 @@ select:focus {
     .role-card-bureau { padding: 22px; }
 
     .activity-card { gap: 14px; padding: 16px; }
+    .activity-archive-row { grid-template-columns: 1fr; gap: 8px; }
+    .activity-archive-row form { justify-self: end; }
     .date-badge { width: 58px; height: 64px; }
     .date-badge-day { font-size: 1.5rem; }
     .activity-card-title { font-size: 1.1875rem; }

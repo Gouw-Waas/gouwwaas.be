@@ -70,6 +70,20 @@ class MolliePaymentGateway implements PaymentGateway
         return $payment->isOpen() ? $payment->getCheckoutUrl() : null;
     }
 
+    public function refund(string $paymentId, int $amountCents, string $description): string
+    {
+        try {
+            $refund = $this->client()->paymentRefunds->createForId($paymentId, [
+                'amount' => ['currency' => 'EUR', 'value' => number_format($amountCents / 100, 2, '.', '')],
+                'description' => mb_substr($description, 0, 140),
+            ]);
+        } catch (MollieException $e) {
+            throw new PaymentException('Mollie: '.$e->getMessage(), previous: $e);
+        }
+
+        return $refund->id;
+    }
+
     private function client(): MollieApiClient
     {
         if (! $this->apiKey) {
