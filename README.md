@@ -162,6 +162,14 @@ copy. Sent straight away, like all mail (no queue worker).
 page has the same links. `/activiteiten/{slug}/agenda.ics` serves the file (public; an
 activity without an end lasts one day, as everywhere else). The code is in `app/Support/ActivityCalendar.php`.
 
+**Home page texts.** The text blocks on the home page ("Gouw watte?", "En wat doen
+jullie dan?"…) are stored in `page_blocks`; the migration creates the first two. Admins
+add blocks with "+ Blok toevoegen" (new blocks go at the end), and change or remove one
+with its "Bewerken" button. The text is
+light Markdown (blank line = new paragraph, `**bold**`, `*italic*`, `[link](https://…)`,
+`- ` lists); HTML is shown as text and `javascript:` links are dropped. `{aantal groepen}`
+is replaced by the number of groups on the map.
+
 **Wie is wie.** Every function (`roles` table) has a category: `bureau`, `adjunct`
 or `district`. Admins see a "Bewerken" button on each function to change its
 description, contact details (e-mail, Instagram, Facebook, website; only what is

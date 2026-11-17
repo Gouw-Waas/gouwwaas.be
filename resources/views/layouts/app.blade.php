@@ -83,7 +83,7 @@
                 <div>
                     <address class="footer-address">
                         <strong>Gouwhuis Karree</strong><br>
-                        Apostelstraat 5-7<br>
+                        Apostelstraat 5<br>
                         9100 Sint-Niklaas
                     </address>
                     <ul class="footer-links">

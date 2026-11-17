@@ -7,11 +7,13 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\ManualRegistrationController;
+use App\Http\Controllers\PageBlockController;
 use App\Http\Controllers\ParticipantMailController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ScoutGroupController;
+use App\Models\PageBlock;
 use App\Models\ScoutGroup;
 use Illuminate\Support\Facades\Route;
 
@@ -21,7 +23,10 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', fn () => view('home', ['groupCount' => ScoutGroup::count()]))->name('home');
+Route::get('/', fn () => view('home', [
+    'groupCount' => ScoutGroup::count(),
+    'blocks' => PageBlock::ordered()->get(),
+]))->name('home');
 Route::get('/districten', [DistrictController::class, 'index'])->name('districten');
 Route::get('/wie-is-wie', [RoleController::class, 'index'])->name('wie-is-wie');
 Route::get('/activiteiten', [ActivityController::class, 'index'])->name('activiteiten.index');
@@ -104,6 +109,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/districten/groepen/{scoutGroup}/bewerken', [ScoutGroupController::class, 'edit'])->name('groepen.edit');
         Route::put('/districten/groepen/{scoutGroup}', [ScoutGroupController::class, 'update'])->name('groepen.update');
         Route::delete('/districten/groepen/{scoutGroup}', [ScoutGroupController::class, 'destroy'])->name('groepen.destroy');
+
+        // Text blocks on the home page ("Gouw watte?", "En wat doen jullie dan?"…).
+        Route::get('/blokken/nieuw', [PageBlockController::class, 'create'])->name('blokken.create');
+        Route::post('/blokken', [PageBlockController::class, 'store'])->name('blokken.store');
+        Route::get('/blokken/{block}/bewerken', [PageBlockController::class, 'edit'])->name('blokken.edit');
+        Route::put('/blokken/{block}', [PageBlockController::class, 'update'])->name('blokken.update');
+        Route::delete('/blokken/{block}', [PageBlockController::class, 'destroy'])->name('blokken.destroy');
 
         // Wie is wie: only adjuncten can be added or removed (checked in the controller).
         Route::get('/wie-is-wie/adjuncten/nieuw', [RoleController::class, 'create'])->name('wie-is-wie.create');

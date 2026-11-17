@@ -49,7 +49,7 @@
                 </p>
                 <address class="privacy-address">
                     Gouw Waas · Gouwhuis Karree<br>
-                    Apostelstraat 5-7, 9100 Sint-Niklaas<br>
+                    Apostelstraat 5, 9100 Sint-Niklaas<br>
                     <a href="mailto:gouwbureau@gouwwaas.be">gouwbureau@gouwwaas.be</a>
                 </address>
                 <p>

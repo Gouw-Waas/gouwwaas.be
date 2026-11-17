@@ -460,6 +460,17 @@ a:hover { color: var(--olive-dark); }
     background: var(--orange);
 }
 
+/* Editable text blocks on the home page */
+.page-block-header { display: flex; align-items: flex-start; gap: 12px; }
+.page-block-header h2 { flex: 1; }
+.page-block-edit { flex: none; margin-top: 20px; min-height: 34px; padding: 3px 12px; font-size: .875rem; }
+.page-block { scroll-margin-top: 110px; }
+.page-block-add { margin: 32px 0 0; }
+
+.format-help p { margin: 0 0 4px; }
+.format-help ul { margin: 0; padding-left: 1.2em; }
+.format-help code { padding: 1px 5px; border-radius: 4px; background: var(--lime-light); color: var(--ink); font-size: .8125rem; }
+
 .intro-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

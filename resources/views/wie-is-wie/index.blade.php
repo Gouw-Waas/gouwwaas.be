@@ -6,7 +6,7 @@
     <section class="page-header">
         <div class="container">
             <h1>Wie is wie</h1>
-            <p class="lead">En hoe zit dat dan juist in elkaar?</p>
+            <p class="lead">Deze mensen vind je regelmatig terug in gouwhuis Karree.</p>
         </div>
     </section>
 

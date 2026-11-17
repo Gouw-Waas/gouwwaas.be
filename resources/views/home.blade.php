@@ -23,33 +23,28 @@
         </div>
     </section>
 
+    @if ($blocks->isNotEmpty() || auth()->user()?->is_admin)
     <section class="container section">
         <div class="intro-grid">
-            <article class="prose">
-                <h2>Gouw watte?</h2>
-                <p>
-                    Gouw Waas is de verzameling van de districten Klaas, Lelie, Durme en Land van Aymon, die samen
-                    35 scoutsgroepen vertegenwoordigen verspreid over het ruime Waasland. Onze uitvalsbasis is in
-                    gouwhuis Karree in Sint-Niklaas.
-                </p>
-                <p><a href="{{ route('districten') }}" class="arrow-link">Bekijk alle groepen per district</a></p>
-            </article>
-
-            <article class="prose">
-                <h2>En wat doen jullie dan?</h2>
-                <p>
-                    De meeste leiding kent ons ongetwijfeld van <strong>Herfstontmoeting</strong>, waar onze ploeg voor
-                    jullie klaarstaat. Als gouw ondersteunen wij de districten (en daarmee ook indirect de groepen) in
-                    verschillende pedagogische en beleidsmatige thema's. Dit doen we door het aanbieden van vormingen
-                    en het vertegenwoordigen op enkele nationale vergaderingen.
-                </p>
-                <p>
-                    Daarnaast organiseren we ook <strong>open kampwerkingen</strong>, zodat elk kind of jongere uit de
-                    regio mee op kamp kan, ook als dat via een eigen groep wat moeilijker lukt.
-                </p>
-            </article>
+            @foreach ($blocks as $block)
+                <article class="prose page-block" id="blok-{{ $block->id }}">
+                    <div class="page-block-header">
+                        <h2>{{ $block->title }}</h2>
+                        @can('admin')
+                            <a href="{{ route('blokken.edit', $block) }}" class="button button-ghost button-small page-block-edit" aria-label="{{ $block->title }} bewerken">Bewerken</a>
+                        @endcan
+                    </div>
+                    {!! $block->bodyHtml() !!}
+                </article>
+            @endforeach
         </div>
+        @can('admin')
+            <p class="page-block-add">
+                <a href="{{ route('blokken.create') }}" class="button button-ghost button-small">+ Blok toevoegen</a>
+            </p>
+        @endcan
     </section>
+    @endif
 
     <section class="container section section-flush-top">
         <div class="cta">
