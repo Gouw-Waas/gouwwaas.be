@@ -109,6 +109,7 @@
                         @endforeach
 
                         <p class="muted small"><span class="required" aria-hidden="true">*</span> verplicht</p>
+                        <p class="muted small">Wat we met je gegevens doen, lees je in onze <a href="{{ route('privacy') }}">privacyverklaring</a>.</p>
 
                         @unless ($activity->isFree())
                             <p class="muted small">Na het invullen betaal je {{ $activity->priceLabel() }} online. Je inschrijving is pas definitief als de betaling gelukt is.</p>

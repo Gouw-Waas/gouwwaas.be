@@ -23,6 +23,7 @@ Route::get('/', fn () => view('home', ['groupCount' => ScoutGroup::count()]))->n
 Route::get('/districten', [DistrictController::class, 'index'])->name('districten');
 Route::get('/wie-is-wie', [RoleController::class, 'index'])->name('wie-is-wie');
 Route::get('/activiteiten', [ActivityController::class, 'index'])->name('activiteiten.index');
+Route::view('/privacy', 'privacy')->name('privacy');
 
 Route::middleware('auth')->group(function () {
     // Before /activiteiten/{activity}, so "nieuw" isn't read as an activity slug.

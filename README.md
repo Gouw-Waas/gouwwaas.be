@@ -80,6 +80,9 @@ The site is in Dutch (`APP_LOCALE=nl`).
   (`resources/views/wie-is-wie/`)
 - `/activiteiten` – upcoming and past activities; anyone can open one and register
   until the registration deadline (`resources/views/activiteiten/`)
+- `/privacy` – privacy statement (`resources/views/privacy.blade.php`), linked from the
+  footer and the registration form. Update it (and its "laatst aangepast" date) when the
+  site starts collecting or sharing other data
 - `/login` – login; once logged in the header shows "Welkom {naam}!"
 - `/wachtwoord-vergeten` – request a password reset e-mail
 - `/profiel` – logged-in users: see name and e-mail, change password
@@ -166,6 +169,10 @@ Styling lives in `public/css/app.css` (no build step required). Colours come fro
 the Gouw Waas emblem (`public/images/logo-*.webp`) and the Scouts en Gidsen
 Vlaanderen house style, with Zilla Slab and Nunito Sans (self-hosted in
 `public/fonts`, SIL OFL) standing in for the paid house fonts.
+
+**Error pages** (`resources/views/errors/`: 403, 404, 419, 429, 500, 503) use their own
+layout without login state, session or database, so they still render when those are
+the problem.
 
 ## Tests and code quality
 

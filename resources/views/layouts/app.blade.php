@@ -108,6 +108,12 @@
                 </a>
             </div>
         </div>
+        <div class="footer-bottom">
+            <div class="container footer-bottom-inner">
+                <span>© {{ date('Y') }} Gouw Waas</span>
+                <a href="{{ route('privacy') }}">Privacyverklaring</a>
+            </div>
+        </div>
     </footer>
 </body>
 </html>
