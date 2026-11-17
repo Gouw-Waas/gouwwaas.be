@@ -1072,7 +1072,8 @@ a.group-row:hover .group-name { color: var(--olive); }
     gap: 12px;
 }
 
-.activity-archive-row form { margin: 0; }
+.activity-archive-row form { margin: 0; display: grid; justify-items: end; gap: 4px; }
+.archive-auto { margin: 0; white-space: nowrap; }
 
 .activity-card {
     display: flex;

@@ -160,7 +160,7 @@
 
                 <h2 id="bewaren">Hoe lang bewaren we je gegevens?</h2>
                 <ul>
-                    <li><strong>Inschrijvingen</strong>: tot de activiteit na afloop gearchiveerd wordt. Daarbij worden alle inschrijvingen definitief verwijderd. Wordt je inschrijving geannuleerd, dan verdwijnt ze meteen.</li>
+                    <li><strong>Inschrijvingen</strong>: tot de activiteit gearchiveerd wordt. Dat gebeurt automatisch {{ \App\Models\Activity::retentionLabel() }} na afloop, of eerder door een beheerder. Daarbij worden alle inschrijvingen definitief verwijderd. Wordt je inschrijving geannuleerd, dan verdwijnt ze meteen.</li>
                     <li><strong>Betalingen</strong>: Mollie bewaart de gegevens van betalingen en terugbetalingen zo lang als de wet voor de boekhouding vereist.</li>
                     <li><strong>Wie is wie</strong>: zolang je de functie hebt.</li>
                     <li><strong>Accounts</strong>: zolang je toegang nodig hebt.</li>

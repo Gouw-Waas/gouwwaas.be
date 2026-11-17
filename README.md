@@ -146,6 +146,24 @@ Long descriptions are shortened on the page with a "Lees meer" button. Photos ar
 stored on the `public` disk,
 so run `php artisan storage:link` once locally (deploys do this automatically).
 
+**Automatic archiving.** Activities are archived automatically `archive_after_months`
+(`config/gouw.php`, 24) after they ended: the activity and its registrations are deleted,
+without refunds or e-mails (`php artisan activities:archive`; `--dry-run` previews, `-v`
+shows what it does). It runs once a day from a cron job set in the hosting control panel
+(the host doesn't allow `crontab` over SSH):
+
+| Field | Value |
+| --- | --- |
+| Minute / hour | `0` / `3` (every night at 03:00); day, month and weekday `*` |
+| Command | `/usr/local/bin/php /home/u211343p458668/gouwwaas/current/artisan activities:archive` |
+| E-mail for cron output | the address that should hear about failures |
+
+It must be a single command (the host's cron check refuses `cd … &&` and redirects) and
+must **not** use `--quiet`: that would also hide errors. The command prints nothing when
+all goes well (what it archived goes to the log), so the cron e-mail only arrives when
+something fails. The deploy path is `~/gouwwaas` (`public_html` points to
+`~/gouwwaas/current/public`).
+
 **Districts and groups.** The four districts (name, map colour, outline) are in
 `config/gouw.php`. The scouting groups are in the database (`scout_groups`): name, group
 number (e.g. O3101G), type (gemengd, scouts, gidsen, zeescouts), meeting place address,

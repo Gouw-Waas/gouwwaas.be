@@ -20,6 +20,14 @@ return [
     ],
 
     /*
+    | Past activities are archived automatically this many months after they ended:
+    | the activity and all its registrations are deleted permanently (no refunds, no
+    | e-mails). Runs every night: php artisan activities:archive, from a cron job in the
+    | hosting control panel (see README). Also mentioned in the privacy statement.
+    */
+    'archive_after_months' => 24,
+
+    /*
     | The four districts. Each gets a fixed "District <name>" function (its
     | districtsploeg) on /wie-is-wie and a colour on the map on /districten.
     |

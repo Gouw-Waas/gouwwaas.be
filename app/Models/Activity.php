@@ -95,7 +95,51 @@ class Activity extends Model
 
     public function isPast(): bool
     {
-        return ($this->ends_at ?? $this->starts_at->copy()->addDay())->isPast();
+        return $this->endedAt()->isPast();
+    }
+
+    /**
+     * When the activity is over: its end, or one day after its start when it has no end.
+     */
+    public function endedAt(): Carbon
+    {
+        return $this->ends_at ?? $this->starts_at->copy()->addDay();
+    }
+
+    /**
+     * When the activity is archived automatically (config gouw.archive_after_months).
+     */
+    public function archivesAt(): Carbon
+    {
+        return $this->endedAt()->addMonths((int) config('gouw.archive_after_months'));
+    }
+
+    /**
+     * The retention period in words, e.g. "2 jaar" or "18 maanden".
+     */
+    public static function retentionLabel(): string
+    {
+        $months = (int) config('gouw.archive_after_months');
+
+        if ($months % 12 === 0) {
+            return ($months / 12).' jaar';
+        }
+
+        return $months === 1 ? '1 maand' : "{$months} maanden";
+    }
+
+    /**
+     * Activities that ended more than gouw.archive_after_months ago.
+     *
+     * @param  Builder<Activity>  $query
+     */
+    public function scopeArchivable(Builder $query): void
+    {
+        $cutoff = now()->subMonths((int) config('gouw.archive_after_months'));
+
+        $query->where(fn (Builder $q) => $q
+            ->where('ends_at', '<', $cutoff)
+            ->orWhere(fn (Builder $q) => $q->whereNull('ends_at')->where('starts_at', '<', $cutoff->copy()->subDay())));
     }
 
     public function isRegistrationOpen(): bool

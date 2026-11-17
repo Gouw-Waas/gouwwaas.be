@@ -61,7 +61,10 @@
         <section class="container section">
             <div class="section-heading">
                 <h2>Voorbije activiteiten</h2>
-                <p>Alleen zichtbaar voor beheerders. Archiveren verwijdert een activiteit en haar inschrijvingen definitief.</p>
+                <p>
+                    Alleen zichtbaar voor beheerders. Archiveren verwijdert een activiteit en haar inschrijvingen definitief.
+                    {{ ucfirst(\App\Models\Activity::retentionLabel()) }} na afloop gebeurt dat automatisch.
+                </p>
             </div>
             <div class="activity-list activity-list-past">
                 @foreach ($past as $activity)
@@ -77,6 +80,7 @@
                               data-confirm-button="Archiveren" data-confirm-cancel="Terug">
                             @csrf
                             <button type="submit" class="button button-danger button-small">Archiveren</button>
+                            <p class="muted small archive-auto">Automatisch op {{ $activity->archivesAt()->translatedFormat('j M Y') }}</p>
                         </form>
                     </div>
                 @endforeach
