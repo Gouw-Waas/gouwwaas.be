@@ -312,6 +312,28 @@ a:hover { color: var(--olive-dark); }
 
 .page-header h1 { margin-bottom: .25em; }
 
+/* Activity with a background image: the photo behind a dark gradient, light text on top. */
+.page-header-image {
+    background:
+        linear-gradient(180deg, rgba(20, 24, 6, .55) 0%, rgba(20, 24, 6, .82) 100%),
+        var(--header-image) center / cover no-repeat,
+        var(--ink);
+    border-bottom-color: var(--lime);
+    color: #fff;
+}
+
+.page-header-image h1,
+.page-header-image .facts li { color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .45); }
+.page-header-image .facts svg { color: var(--lime); }
+.page-header-image .back-link { color: var(--lime); }
+.page-header-image .owner-actions .button-ghost { background: rgba(255, 255, 255, .92); }
+
+.image-current { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-bottom: 12px; }
+.image-current .checkbox { margin: 0; }
+.image-preview { display: block; width: 240px; max-width: 100%; margin-bottom: 12px; aspect-ratio: 1200 / 630; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
+.image-preview[hidden] { display: none; }
+.image-current .image-preview { margin: 0; }
+
 .page-header-row {
     display: flex;
     flex-wrap: wrap;

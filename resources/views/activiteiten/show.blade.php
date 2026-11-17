@@ -2,9 +2,14 @@
 
 @section('title', $activity->title)
 @section('description', \Illuminate\Support\Str::limit($activity->description, 155))
+@if ($activity->imageAbsoluteUrl())
+    @section('og_image', $activity->imageAbsoluteUrl())
+@endif
 
 @section('content')
-    <section class="page-header">
+    @php($image = $activity->imageUrl())
+    <section @class(['page-header', 'page-header-image' => $image])
+             @if ($image) style="--header-image: url('{{ $image }}')" @endif>
         <div class="container">
             <p><a href="{{ route('activiteiten.index') }}" class="back-link">Alle activiteiten</a></p>
             <h1>{{ $activity->title }}</h1>

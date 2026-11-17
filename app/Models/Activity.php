@@ -10,14 +10,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
  * @property Carbon $starts_at
  * @property Carbon|null $ends_at
  * @property Carbon $registration_deadline
+ * @property string|null $image_path
  */
 #[Fillable(['title', 'description', 'location', 'starts_at', 'ends_at', 'registration_deadline', 'price_cents', 'capacity'])]
 class Activity extends Model
@@ -35,8 +38,14 @@ class Activity extends Model
         ];
     }
 
+    /** Where background images are stored (public disk, under activities/). */
+    public const IMAGE_DISK = 'public';
+
     protected static function booted(): void
     {
+        // The background image goes with the activity (deleted, cancelled or archived).
+        static::deleted(fn (Activity $activity) => $activity->deleteImage());
+
         // The slug is fixed at creation, so shared links keep working after a title change.
         static::creating(function (Activity $activity) {
             $base = Str::slug($activity->title) ?: 'activiteit';
@@ -54,6 +63,56 @@ class Activity extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    /**
+     * The background image for use on the site, or null without one (or when the file is
+     * missing, e.g. a local copy of the production data).
+     *
+     * Without host ("/storage/…"): the disk's URL is built from APP_URL, and when the site is
+     * opened on another host (127.0.0.1 vs localhost, www vs no www) the browser's CSP
+     * (img-src 'self') would block it.
+     */
+    public function imageUrl(): ?string
+    {
+        if (! $this->image_path || ! Storage::disk(self::IMAGE_DISK)->exists($this->image_path)) {
+            return null;
+        }
+
+        $url = Storage::disk(self::IMAGE_DISK)->url($this->image_path);
+
+        return parse_url($url, PHP_URL_PATH) ?: $url;
+    }
+
+    /**
+     * The same image as a full URL on the host the visitor is on, for link previews
+     * (Open Graph), which need an absolute URL.
+     */
+    public function imageAbsoluteUrl(): ?string
+    {
+        $url = $this->imageUrl();
+
+        return $url ? url($url) : null;
+    }
+
+    /**
+     * Replace the background image with $file, or remove it when $remove is set. Saves nothing else.
+     */
+    public function updateImage(?UploadedFile $file, bool $remove = false): void
+    {
+        if (! $file && ! $remove) {
+            return;
+        }
+
+        $this->deleteImage();
+        $this->image_path = $file ? ($file->store('activities', self::IMAGE_DISK) ?: null) : null;
+    }
+
+    public function deleteImage(): void
+    {
+        if ($this->image_path) {
+            Storage::disk(self::IMAGE_DISK)->delete($this->image_path);
+        }
     }
 
     /** @return BelongsTo<User, $this> */

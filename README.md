@@ -104,6 +104,16 @@ see its registrations, which can be downloaded as an Excel file (.xlsx). Answers
 copy of the question label, so changing or removing a question later does not
 lose earlier answers.
 
+**Background image and link previews.** An activity can have a background image
+(optional, on the activity form). It is shown behind the title on the activity page,
+under a dark gradient so the title and details stay readable on any photo. In the
+browser, large photos are made at most 1920 pixels wide (JPEG) before uploading; the
+server accepts jpg, png and webp up to 5 MB. The file is stored on the `public` disk
+(`activities/`) and deleted with the activity (also when cancelled or archived).
+Every page has Open Graph tags for link previews (WhatsApp, Facebook, LinkedIn…): title,
+description, URL and image. An activity with a background image uses it as preview
+image; other pages use the logo (`public/images/logo-600.png`).
+
 **Payments and confirmation e-mails.** After registering, everyone lands on their
 registration's own page (`/inschrijvingen/{token}`, a secret 40-character token, never
 the id). For a free activity that page confirms the registration and a confirmation

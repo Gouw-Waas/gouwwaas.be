@@ -6,6 +6,16 @@
     <meta name="theme-color" content="#23290a">
     <meta name="description" content="@yield('description', 'Gouw Waas verenigt de scoutsgroepen van de districten Klaas, Lelie, Durme en Land van Aymon in het Waasland.')">
     <title>@yield('title', 'Home') · {{ config('app.name') }}</title>
+    {{-- Link previews (WhatsApp, Facebook, LinkedIn…). Pages can set og_image (an absolute URL). --}}
+    @php($ogImage = trim($__env->yieldContent('og_image')))
+    <meta property="og:site_name" content="{{ config('app.name') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="nl_BE">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="@yield('title', 'Home') · {{ config('app.name') }}">
+    <meta property="og:description" content="@yield('description', 'Gouw Waas verenigt de scoutsgroepen van de districten Klaas, Lelie, Durme en Land van Aymon in het Waasland.')">
+    <meta property="og:image" content="{{ $ogImage !== '' ? $ogImage : asset('images/logo-600.png') }}">
+    <meta name="twitter:card" content="{{ $ogImage !== '' ? 'summary_large_image' : 'summary' }}">
     <link rel="icon" href="{{ asset('images/icon-192.png') }}" type="image/png">
     <link rel="apple-touch-icon" href="{{ asset('images/icon-192.png') }}">
     <link rel="preload" href="{{ asset('fonts/nunito-sans-variable.woff2') }}" as="font" type="font/woff2" crossorigin>

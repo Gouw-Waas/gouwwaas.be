@@ -28,7 +28,7 @@
     </section>
 
     <section class="container section">
-        <form method="POST" action="{{ $activity->exists ? route('activiteiten.update', $activity) : route('activiteiten.store') }}" class="form activity-form">
+        <form method="POST" action="{{ $activity->exists ? route('activiteiten.update', $activity) : route('activiteiten.store') }}" class="form activity-form" enctype="multipart/form-data">
             @csrf
             @if ($activity->exists)
                 @method('PUT')
@@ -55,6 +55,29 @@
                     <p class="hint" id="description-hint">Laat een lege regel tussen alinea's.</p>
                     @error('description')
                         <p class="error" id="description-error">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="field">
+                    <label for="image">Achtergrondafbeelding <span class="muted">(optioneel)</span></label>
+                    @if ($activity->imageUrl())
+                        <div class="image-current">
+                            <img src="{{ $activity->imageUrl() }}" alt="Huidige achtergrondafbeelding" class="image-preview" data-image-preview>
+                            <label class="checkbox">
+                                <input type="checkbox" name="remove_image" value="1" @checked(old('remove_image'))>
+                                <span>Afbeelding verwijderen</span>
+                            </label>
+                        </div>
+                    @else
+                        <img src="" alt="Gekozen achtergrondafbeelding" class="image-preview" data-image-preview hidden>
+                    @endif
+                    <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp" data-image-input aria-describedby="image-hint @error('image') image-error @enderror" @error('image') aria-invalid="true" @enderror>
+                    <p class="hint" id="image-hint">
+                        Komt achter de titel bovenaan de pagina en verschijnt als voorbeeld wanneer iemand de link deelt
+                        (WhatsApp, Facebook…). Kies een liggende foto, liefst minstens 1200 pixels breed.
+                    </p>
+                    @error('image')
+                        <p class="error" id="image-error">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -195,6 +218,47 @@
     </section>
 
     <script nonce="{{ $cspNonce ?? '' }}">
+        // Background image: phone photos are large, so make them at most 1920 pixels wide (JPEG)
+        // before uploading, and show a preview. Without JavaScript the original is uploaded.
+        (() => {
+            const input = document.querySelector('[data-image-input]');
+            const preview = document.querySelector('[data-image-preview]');
+            if (! input || ! window.DataTransfer) return;
+            const MAX = 1920;
+
+            input.addEventListener('change', async () => {
+                const file = input.files[0];
+                if (! file || ! file.type.startsWith('image/')) return;
+
+                try {
+                    const bitmap = await createImageBitmap(file);
+                    const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+
+                    if (scale < 1 || file.size > 1500000) {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.round(bitmap.width * scale);
+                        canvas.height = Math.round(bitmap.height * scale);
+                        canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+
+                        if (blob) {
+                            const name = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+                            const transfer = new DataTransfer();
+                            transfer.items.add(new File([blob], name, { type: 'image/jpeg' }));
+                            input.files = transfer.files;
+                        }
+                    }
+                } catch (e) {
+                    // The browser can't read it: upload the original, the server checks it.
+                }
+
+                if (preview) {
+                    preview.src = URL.createObjectURL(input.files[0]);
+                    preview.hidden = false;
+                }
+            });
+        })();
+
         (() => {
             const list = document.querySelector('[data-field-list]');
             const template = document.querySelector('[data-field-template]');

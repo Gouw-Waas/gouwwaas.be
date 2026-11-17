@@ -89,7 +89,9 @@ class ActivityController extends Controller
         [$attributes, $fields] = $this->validated($request);
 
         $activity = DB::transaction(function () use ($request, $attributes, $fields) {
-            $activity = $request->user()->activities()->create($attributes);
+            $activity = $request->user()->activities()->make($attributes);
+            $activity->updateImage($request->file('image'));
+            $activity->save();
             $activity->syncFields($fields);
 
             return $activity;
@@ -111,8 +113,10 @@ class ActivityController extends Controller
 
         [$attributes, $fields] = $this->validated($request);
 
-        DB::transaction(function () use ($activity, $attributes, $fields) {
-            $activity->update($attributes);
+        DB::transaction(function () use ($request, $activity, $attributes, $fields) {
+            $activity->fill($attributes);
+            $activity->updateImage($request->file('image'), $request->boolean('remove_image'));
+            $activity->save();
             $activity->syncFields($fields);
         });
 
@@ -163,6 +167,9 @@ class ActivityController extends Controller
             'registration_deadline' => ['required', 'date', 'before_or_equal:starts_at'],
             'price' => ['nullable', 'regex:/^\d{1,5}([.,]\d{1,2})?$/'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            // Usually made smaller in the browser before uploading (see the form).
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_image' => ['nullable', 'boolean'],
             'fields' => ['nullable', 'array', 'max:30'],
             'fields.*.id' => ['nullable', 'integer'],
             'fields.*.label' => ['required', 'string', 'max:255'],
@@ -173,6 +180,9 @@ class ActivityController extends Controller
             'ends_at.after_or_equal' => 'Het einde moet na het begin liggen.',
             'registration_deadline.before_or_equal' => 'De inschrijvingsdeadline moet voor het begin van de activiteit liggen.',
             'price.regex' => 'Vul een bedrag in, bv. 12 of 12,50.',
+            'image.image' => 'Kies een afbeelding (jpg, png of webp).',
+            'image.mimes' => 'Kies een afbeelding (jpg, png of webp).',
+            'image.max' => 'De afbeelding mag maximaal 5 MB groot zijn.',
             'fields.*.label.required' => 'Geef elk veld een naam.',
         ], [
             'title' => 'titel',
@@ -183,6 +193,7 @@ class ActivityController extends Controller
             'registration_deadline' => 'inschrijvingsdeadline',
             'price' => 'prijs',
             'capacity' => 'maximum aantal deelnemers',
+            'image' => 'achtergrondafbeelding',
         ]);
 
         // A dropdown needs at least one option to choose from.
