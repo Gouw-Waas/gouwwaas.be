@@ -220,6 +220,11 @@ to production with [Deployer](https://deployer.org) (`deploy.php`,
 - `storage/` and `.env` are shared between releases, in `shared/`.
 - The production `.env` is generated from GitHub secrets on every deploy.
 - Migrations run automatically (`migrate --force`).
+- After the deploy, the workflow checks `APP_URL/up` (the app starts and reaches the
+  database) and the home page. If either doesn't answer 200 within a minute, the run
+  fails (GitHub e-mails you) and the previous release is put back automatically
+  (`dep rollback`). Only the code goes back: migrations that already ran stay, so keep
+  them backward compatible.
 
 ### GitHub secrets
 

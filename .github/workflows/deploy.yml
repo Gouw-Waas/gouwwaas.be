@@ -91,6 +91,50 @@ jobs:
           private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 
+      # /up checks that the app starts and reaches the database; / that pages render.
+      - name: Health check
+        id: health
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          for path in /up /; do
+            ok=
+            for attempt in 1 2 3 4 5 6; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "${APP_URL%/}$path" || true)
+              echo "$path, attempt $attempt: HTTP $code"
+              if [ "$code" = "200" ]; then ok=1; break; fi
+              sleep 10
+            done
+            if [ -z "$ok" ]; then
+              echo "::error::${APP_URL%/}$path did not answer 200 after the deploy; rolling back."
+              exit 1
+            fi
+          done
+
+      # Only the code goes back: migrations that already ran stay (keep them backward compatible).
+      - name: Roll back to the previous release
+        if: failure() && steps.health.outcome == 'failure'
+        uses: deployphp/action@v1
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_PHP_BIN: ${{ secrets.DEPLOY_PHP_BIN }}
+        with:
+          dep: rollback production
+          deployer-version: '8.0.5'
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+      - name: Health after rollback
+        if: failure() && steps.health.outcome == 'failure'
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "${APP_URL%/}/up" || true)
+          echo "After the rollback, /up answers HTTP $code"
+
       - name: Remove production .env
         if: always()
         run: rm -f "$RUNNER_TEMP/.env.production"
