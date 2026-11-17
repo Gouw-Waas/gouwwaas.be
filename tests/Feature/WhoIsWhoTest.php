@@ -201,6 +201,20 @@ class WhoIsWhoTest extends TestCase
         Storage::disk('public')->assertMissing($photo);
     }
 
+    public function test_photos_work_when_app_url_is_another_host(): void
+    {
+        // www vs no www in production: the CSP (img-src 'self') blocks images on APP_URL's host.
+        Storage::fake('public', ['url' => 'https://gouwwaas.be/storage']);
+        Storage::disk('public')->put('wie-is-wie/an.png', 'png');
+        $this->role(Role::BUREAU, 'voorzitter')->members()->create([
+            'first_name' => 'An', 'last_name' => 'Peeters', 'photo_path' => 'wie-is-wie/an.png', 'position' => 0,
+        ]);
+
+        $this->get('https://www.gouwwaas.be/wie-is-wie')
+            ->assertSee('src="/storage/wie-is-wie/an.png"', false)
+            ->assertDontSee('gouwwaas.be/storage');
+    }
+
     public function test_existing_people_keep_their_photo_unless_removed_or_replaced(): void
     {
         $role = $this->role(Role::DISTRICT, 'lelie');

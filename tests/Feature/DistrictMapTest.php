@@ -106,6 +106,18 @@ class DistrictMapTest extends TestCase
         $this->get('/districten')->assertOk()->assertDontSee('alleen-op-prod');
     }
 
+    public function test_logos_work_when_app_url_is_another_host(): void
+    {
+        // www vs no www in production: the CSP (img-src 'self') blocks images on APP_URL's host.
+        Storage::fake('public', ['url' => 'https://gouwwaas.be/storage']);
+        Storage::disk('public')->put('logos/groepen/groep.png', 'png');
+        ScoutGroup::where('number', 'O3106G')->update(['logo_path' => 'logos/groepen/groep.png']);
+
+        $this->get('https://www.gouwwaas.be/districten')
+            ->assertSee('src="/storage/logos/groepen/groep.png"', false)
+            ->assertDontSee('gouwwaas.be/storage');
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>

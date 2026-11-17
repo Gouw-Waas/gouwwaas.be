@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PublicFile;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,16 +39,12 @@ class RoleMember extends Model
     }
 
     /**
-     * Null when there is no photo, or when the file is missing (e.g. a local copy of
-     * the production data without the uploads): the views then show initials.
+     * The photo's URL without host, or null without a photo (see PublicFile::url):
+     * the views then show the placeholder.
      */
     public function photoUrl(): ?string
     {
-        if (! $this->photo_path || ! Storage::disk(self::PHOTO_DISK)->exists($this->photo_path)) {
-            return null;
-        }
-
-        return Storage::disk(self::PHOTO_DISK)->url($this->photo_path);
+        return PublicFile::url(self::PHOTO_DISK, $this->photo_path);
     }
 
     public function deletePhoto(): void
