@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Support\PublicFile;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,15 +19,11 @@ trait HasLogo
     }
 
     /**
-     * Null without a logo, or when the file is missing (e.g. a local copy of the production data).
+     * The logo's URL without host, or null without a logo (see PublicFile::url).
      */
     public function logoUrl(): ?string
     {
-        if (! $this->logo_path || ! Storage::disk(self::LOGO_DISK)->exists($this->logo_path)) {
-            return null;
-        }
-
-        return Storage::disk(self::LOGO_DISK)->url($this->logo_path);
+        return PublicFile::url(self::LOGO_DISK, $this->logo_path);
     }
 
     /**

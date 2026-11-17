@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PublicFile;
 use Database\Factories\ActivityFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -66,22 +67,12 @@ class Activity extends Model
     }
 
     /**
-     * The background image for use on the site, or null without one (or when the file is
-     * missing, e.g. a local copy of the production data).
-     *
-     * Without host ("/storage/…"): the disk's URL is built from APP_URL, and when the site is
-     * opened on another host (127.0.0.1 vs localhost, www vs no www) the browser's CSP
-     * (img-src 'self') would block it.
+     * The background image for use on the site (without host), or null without one
+     * (see PublicFile::url).
      */
     public function imageUrl(): ?string
     {
-        if (! $this->image_path || ! Storage::disk(self::IMAGE_DISK)->exists($this->image_path)) {
-            return null;
-        }
-
-        $url = Storage::disk(self::IMAGE_DISK)->url($this->image_path);
-
-        return parse_url($url, PHP_URL_PATH) ?: $url;
+        return PublicFile::url(self::IMAGE_DISK, $this->image_path);
     }
 
     /**
