@@ -149,7 +149,7 @@
         </form>
     </dialog>
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         (() => {
             const list = document.querySelector('[data-member-list]');
             const template = document.querySelector('[data-member-template]');

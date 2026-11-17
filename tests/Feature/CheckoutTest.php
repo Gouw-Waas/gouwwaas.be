@@ -26,6 +26,7 @@ class CheckoutTest extends TestCase
         $this->app->instance(PaymentGateway::class, $this->gateway);
     }
 
+    /** @param array<string, mixed> $data */
     private function register(Activity $activity, array $data = []): Registration
     {
         $activity->syncFields([['label' => 'Tak', 'type' => 'text', 'required' => false]]);
@@ -39,6 +40,7 @@ class CheckoutTest extends TestCase
         return $activity->registrations()->latest('id')->firstOrFail();
     }
 
+    /** @param array<string, mixed> $state */
     private function paidActivity(array $state = []): Activity
     {
         return Activity::factory()->create(['price_cents' => 1250, 'title' => 'Gouwweekend'] + $state);

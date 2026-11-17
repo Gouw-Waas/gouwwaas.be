@@ -29,7 +29,7 @@ set('keep_releases', 5);
 set('writable_mode', 'skip');
 
 // The CI pipeline writes the production .env to this local file.
-set('dotenv_source', getenv('DEPLOY_DOTENV_FILE') ?: __DIR__ . '/.env.production');
+set('dotenv_source', getenv('DEPLOY_DOTENV_FILE') ?: __DIR__.'/.env.production');
 
 set('rsync_src', __DIR__);
 set('rsync', [
@@ -42,7 +42,6 @@ set('rsync', [
         '/.env.*',
         '/deploy.php',
         '/docker-compose.yml',
-        '/node_modules',
         '/tests',
         '/phpunit.xml',
         '/storage/logs/*.log',

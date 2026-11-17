@@ -6,8 +6,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
+/**
+ * @property array<int, array{field_id: int, label: string, value: string|null}> $answers
+ * @property Carbon|null $paid_at
+ * @property Carbon|null $confirmation_sent_at
+ */
 #[Fillable(['name', 'email', 'answers', 'amount_cents'])]
 class Registration extends Model
 {
@@ -36,6 +42,7 @@ class Registration extends Model
         return 'token';
     }
 
+    /** @return BelongsTo<Activity, $this> */
     public function activity(): BelongsTo
     {
         return $this->belongsTo(Activity::class);
@@ -44,6 +51,7 @@ class Registration extends Model
     /**
      * Free registrations, and paid ones whose payment came through.
      */
+    /** @param Builder<Registration> $query */
     public function scopeConfirmed(Builder $query): void
     {
         $query->where(fn (Builder $q) => $q->where('amount_cents', 0)->orWhere('payment_status', 'paid'));

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ScoutGroup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -102,6 +103,6 @@ class ScoutGroupController extends Controller
 
         $validated['website'] = filled($validated['website'] ?? null) ? $validated['website'] : null;
 
-        return collect($validated)->except(['logo', 'remove_logo'])->all();
+        return Arr::except($validated, ['logo', 'remove_logo']);
     }
 }

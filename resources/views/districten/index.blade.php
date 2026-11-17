@@ -95,6 +95,6 @@
     </section>
 
     <script src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
-    <script>window.districtMap = @json($mapData);</script>
+    <script nonce="{{ $cspNonce ?? '' }}">window.districtMap = @json($mapData);</script>
     <script src="{{ asset('js/districten.js') }}?v={{ filemtime(public_path('js/districten.js')) }}"></script>
 @endsection

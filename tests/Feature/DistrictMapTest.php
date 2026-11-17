@@ -106,6 +106,10 @@ class DistrictMapTest extends TestCase
         $this->get('/districten')->assertOk()->assertDontSee('alleen-op-prod');
     }
 
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
     private function validGroup(array $overrides = []): array
     {
         return array_merge([

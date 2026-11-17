@@ -21,6 +21,7 @@ class RoleMember extends Model
         static::deleted(fn (RoleMember $member) => $member->deletePhoto());
     }
 
+    /** @return BelongsTo<Role, $this> */
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);

@@ -28,7 +28,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
     // Preview the chosen file before saving.
     (() => {
         const input = document.querySelector('[data-logo-input]');

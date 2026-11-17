@@ -151,7 +151,7 @@
     </section>
 
     <script src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         (() => {
             const lat = document.querySelector('[data-lat]');
             const lng = document.querySelector('[data-lng]');

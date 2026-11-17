@@ -167,9 +167,20 @@ the Gouw Waas emblem (`public/images/logo-*.webp`) and the Scouts en Gidsen
 Vlaanderen house style, with Zilla Slab and Nunito Sans (self-hosted in
 `public/fonts`, SIL OFL) standing in for the paid house fonts.
 
-## Tests
+## Tests and code quality
 
-`php artisan test` (uses an in-memory SQLite database).
+- `composer check` runs everything CI runs before a deploy: code style
+  ([Pint](https://laravel.com/docs/pint)), static analysis
+  ([Larastan](https://github.com/larastan/larastan), level 6, `phpstan.neon`) and the tests
+  (`php artisan test`, in-memory SQLite).
+- `composer fix` fixes the code style.
+
+**Security headers** (`app/Http/Middleware/SecurityHeaders.php`): every response has a
+Content-Security-Policy and the usual hardening headers (HSTS over https). Inline scripts
+only run with the request's nonce, so write them as `<script nonce="{{ $cspNonce }}">`;
+inline event handlers (`onclick="…"`) are blocked, so put behaviour in a script file
+(`public/js/site.js`). A test fails when a view breaks either rule. New external hosts
+(images, API calls) have to be added to the policy.
 
 ## Deployment
 

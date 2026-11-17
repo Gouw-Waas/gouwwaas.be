@@ -8,6 +8,8 @@ use App\Models\Registration;
 use App\Payments\PaymentGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Testing\TestResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\Fakes\FakePaymentGateway;
 use Tests\TestCase;
 
@@ -26,6 +28,7 @@ class CancellationTest extends TestCase
         $this->app->instance(PaymentGateway::class, $this->gateway);
     }
 
+    /** @param array<string, mixed> $attributes */
     private function registration(Activity $activity, string $name, ?string $status = null, array $attributes = []): Registration
     {
         $registration = $activity->registrations()->create(['name' => $name, 'email' => strtolower($name).'@example.com', 'answers' => [], 'amount_cents' => $activity->price_cents]);
@@ -44,7 +47,11 @@ class CancellationTest extends TestCase
         return Activity::factory()->create(['price_cents' => 1250, 'title' => 'Gouwweekend']);
     }
 
-    private function cancel(Registration $registration, array $data = [])
+    /**
+     * @param  array<string, mixed>  $data
+     * @return TestResponse<Response>
+     */
+    private function cancel(Registration $registration, array $data = []): TestResponse
     {
         return $this->actingAs($registration->activity->user)
             ->from("/activiteiten/{$registration->activity->slug}/inschrijvingen")

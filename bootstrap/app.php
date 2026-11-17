@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\SecurityHeaders;
 use Dotenv\Dotenv;
 use Dotenv\Repository\RepositoryBuilder;
 use Illuminate\Foundation\Application;
@@ -17,6 +18,9 @@ $app = Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Mollie can't send a CSRF token; the webhook only takes a payment id and asks Mollie itself.
         $middleware->validateCsrfTokens(except: ['mollie/webhook']);
+
+        // CSP and other security headers on every response.
+        $middleware->append(SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

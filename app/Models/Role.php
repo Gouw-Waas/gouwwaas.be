@@ -38,6 +38,7 @@ class Role extends Model
         static::deleting(fn (Role $role) => $role->members()->get()->each->delete());
     }
 
+    /** @return HasMany<RoleMember, $this> */
     public function members(): HasMany
     {
         return $this->hasMany(RoleMember::class)->orderBy('position')->orderBy('id');

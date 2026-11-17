@@ -116,8 +116,7 @@ class ActivityController extends Controller
         $result = $cancellation->cancelActivity($activity);
 
         if ($result['failed']) {
-            return redirect()->route('activiteiten.edit', $activity)->withErrors(['cancel' =>
-                'De activiteit is niet verwijderd: voor '.implode(', ', $result['failed']).' lukte de terugbetaling niet '
+            return redirect()->route('activiteiten.edit', $activity)->withErrors(['cancel' => 'De activiteit is niet verwijderd: voor '.implode(', ', $result['failed']).' lukte de terugbetaling niet '
                 .'(of wordt een betaling nog verwerkt). De andere deelnemers zijn wel terugbetaald en verwittigd. '
                 .'Kijk in het Mollie-dashboard of er genoeg saldo is en probeer opnieuw.',
             ]);

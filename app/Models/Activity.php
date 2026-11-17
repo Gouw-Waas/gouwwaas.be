@@ -2,18 +2,26 @@
 
 namespace App\Models;
 
+use Database\Factories\ActivityFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
+/**
+ * @property Carbon $starts_at
+ * @property Carbon|null $ends_at
+ * @property Carbon $registration_deadline
+ */
 #[Fillable(['title', 'description', 'location', 'starts_at', 'ends_at', 'registration_deadline', 'price_cents'])]
 class Activity extends Model
 {
+    /** @use HasFactory<ActivityFactory> */
     use HasFactory;
 
     protected function casts(): array
@@ -47,16 +55,19 @@ class Activity extends Model
         return 'slug';
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return HasMany<ActivityField, $this> */
     public function fields(): HasMany
     {
         return $this->hasMany(ActivityField::class)->orderBy('position');
     }
 
+    /** @return HasMany<Registration, $this> */
     public function registrations(): HasMany
     {
         return $this->hasMany(Registration::class)->latest();
@@ -66,6 +77,7 @@ class Activity extends Model
      * Activities that aren't over yet. An activity is over once its end has passed, or, without
      * an end, one day after its start.
      */
+    /** @param Builder<Activity> $query */
     public function scopeUpcoming(Builder $query): void
     {
         $query->where(fn (Builder $q) => $q
@@ -73,6 +85,7 @@ class Activity extends Model
             ->orWhere(fn (Builder $q) => $q->whereNull('ends_at')->where('starts_at', '>=', now()->subDay())));
     }
 
+    /** @param Builder<Activity> $query */
     public function scopePast(Builder $query): void
     {
         $query->where(fn (Builder $q) => $q

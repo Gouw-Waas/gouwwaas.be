@@ -83,7 +83,7 @@
         @endif
     </section>
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         // Refund dialog: show what will be refunded, minus the administrative costs when chosen.
         // After DOMContentLoaded: the dialog is in the layout, below this content.
         document.addEventListener('DOMContentLoaded', () => {

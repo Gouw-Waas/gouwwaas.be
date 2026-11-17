@@ -177,7 +177,7 @@
         @endif
     </section>
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         (() => {
             const list = document.querySelector('[data-field-list]');
             const template = document.querySelector('[data-field-template]');

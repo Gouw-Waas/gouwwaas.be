@@ -4,13 +4,20 @@ namespace Tests\Feature;
 
 use App\Models\Activity;
 use App\Models\User;
+use App\Payments\PaymentGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Tests\Fakes\FakePaymentGateway;
 use Tests\TestCase;
 
 class ActivityTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
     private function payload(array $overrides = []): array
     {
         return [
@@ -72,9 +79,9 @@ class ActivityTest extends TestCase
 
     public function test_admins_archive_a_past_activity_without_refunds_or_mails(): void
     {
-        \Illuminate\Support\Facades\Mail::fake();
-        $gateway = new \Tests\Fakes\FakePaymentGateway;
-        $this->app->instance(\App\Payments\PaymentGateway::class, $gateway);
+        Mail::fake();
+        $gateway = new FakePaymentGateway;
+        $this->app->instance(PaymentGateway::class, $gateway);
 
         $past = Activity::factory()->past()->create(['title' => 'Oud weekend', 'price_cents' => 1000]);
         $paid = $past->registrations()->create(['name' => 'Bert', 'email' => 'bert@example.com', 'answers' => [], 'amount_cents' => 1000]);
@@ -89,7 +96,7 @@ class ActivityTest extends TestCase
         $this->assertModelMissing($past);
         $this->assertModelMissing($paid);
         $this->assertSame([], $gateway->refunds);
-        \Illuminate\Support\Facades\Mail::assertNothingSent();
+        Mail::assertNothingSent();
     }
 
     public function test_only_admins_archive_and_only_past_activities(): void

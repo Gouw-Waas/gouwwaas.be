@@ -100,7 +100,7 @@
         </section>
     @endif
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         // Long descriptions are cut off after a few lines, with a button to read the rest.
         // Without JavaScript the full text is shown.
         (() => {

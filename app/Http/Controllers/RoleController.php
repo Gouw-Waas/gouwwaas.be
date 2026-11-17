@@ -6,6 +6,8 @@ use App\Models\Role;
 use App\Models\ScoutGroup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -93,7 +95,7 @@ class RoleController extends Controller
     }
 
     /**
-     * @return array{0: array<string, mixed>, 1: array<int|string, array<string, mixed>>, 2: array<int|string, \Illuminate\Http\UploadedFile>}
+     * @return array{0: array<string, mixed>, 1: array<int|string, array<string, mixed>>, 2: array<int|string, UploadedFile>}
      */
     private function validated(Request $request, Role $role): array
     {
@@ -134,21 +136,22 @@ class RoleController extends Controller
             'website' => 'website',
         ]);
 
-        $attributes = collect($validated)
-            ->only(['description', 'email', 'instagram', 'facebook', 'website'])
-            ->map(fn ($value) => filled($value) ? trim($value) : null)
-            ->all();
+        $attributes = array_map(
+            fn ($value) => filled($value) ? trim($value) : null,
+            Arr::only($validated, ['description', 'email', 'instagram', 'facebook', 'website']),
+        );
 
         if ($role->isAdjunct()) {
             $attributes['title'] = trim($validated['title']);
         }
 
         $members = $validated['members'] ?? [];
-        $photos = collect($members)
-            ->keys()
-            ->mapWithKeys(fn ($key) => [$key => $request->file("members.{$key}.photo")])
-            ->filter()
-            ->all();
+        $photos = [];
+        foreach (array_keys($members) as $key) {
+            if ($photo = $request->file("members.{$key}.photo")) {
+                $photos[$key] = $photo;
+            }
+        }
 
         return [$attributes, $members, $photos];
     }

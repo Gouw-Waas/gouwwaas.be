@@ -11,7 +11,7 @@ use App\Payments\StartedPayment;
  */
 class FakePaymentGateway implements PaymentGateway
 {
-    /** @var array<int, array{id: string, amount: int, description: string, redirectUrl: string, webhookUrl: ?string, metadata: array}> */
+    /** @var array<int, array{id: string, amount: int, description: string, redirectUrl: string, webhookUrl: ?string, metadata: array<string, scalar>}> */
     public array $created = [];
 
     /** @var array<string, string> payment id => status */

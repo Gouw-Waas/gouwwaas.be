@@ -11,6 +11,7 @@ class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** @param array<string, mixed> $state */
     private function activityWithFields(array $state = []): Activity
     {
         $activity = Activity::factory()->create($state);
@@ -24,6 +25,10 @@ class RegistrationTest extends TestCase
         return $activity->load('fields');
     }
 
+    /**
+     * @param  array<int, string|null>  $values  answers in the order of the activity's fields
+     * @return array<int, string|null> field id => answer
+     */
     private function answers(Activity $activity, array $values): array
     {
         return collect($activity->fields)->mapWithKeys(fn ($field, $i) => [$field->id => $values[$i] ?? null])->all();

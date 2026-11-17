@@ -1,12 +1,11 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "gouw-waas/gouwwaas.be",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Website van Gouw Waas (Scouts en Gidsen Vlaanderen)",
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "mollie/mollie-api-php": "^4.1",
@@ -14,6 +13,7 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.15",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
         "laravel/pint": "^1.27",
@@ -40,10 +40,6 @@
             "@php artisan migrate --force --seed",
             "@php artisan storage:link"
         ],
-        "dev": [
-            "Composer\\Config::disableProcessTimeout",
-            "@php artisan dev"
-        ],
         "dev:local": [
             "Composer\\Config::disableProcessTimeout",
             "@putenv APP_ENV=local",
@@ -59,6 +55,14 @@
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
+        ],
+        "check": [
+            "@php vendor/bin/pint --test",
+            "@php vendor/bin/phpstan analyse --memory-limit=1G",
+            "@php artisan test"
+        ],
+        "fix": [
+            "@php vendor/bin/pint"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -94,6 +98,8 @@
     "prefer-stable": true,
     "scripts-descriptions": {
         "dev:local": "Start the Docker database, copy the (anonymised) production data, create admin@gouwwaas.be and serve on :8000",
-        "dev:prod": "Serve on :8001 against the PRODUCTION database (.env.prod)"
+        "dev:prod": "Serve on :8001 against the PRODUCTION database (.env.prod)",
+        "check": "Code style (Pint), static analysis (Larastan) and tests: the same checks as CI",
+        "fix": "Fix the code style with Pint"
     }
 }
