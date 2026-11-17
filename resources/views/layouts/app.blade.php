@@ -121,7 +121,10 @@
         <div class="footer-bottom">
             <div class="container footer-bottom-inner">
                 <span>© {{ date('Y') }} Gouw Waas</span>
-                <a href="{{ route('privacy') }}">Privacyverklaring</a>
+                <span class="footer-bottom-links">
+                    <a href="{{ route('privacy') }}">Privacyverklaring</a>
+                    <a href="https://github.com/Gouw-Waas/gouwwaas.be" rel="noopener">Broncode op GitHub</a>
+                </span>
             </div>
         </div>
     </footer>

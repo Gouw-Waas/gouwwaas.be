@@ -1706,6 +1706,7 @@ select:focus {
 .site-footer a { color: #fff; }
 
 .footer-bottom { border-top: 1px solid rgba(255, 255, 255, .12); }
+.footer-bottom-links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 
 .footer-bottom-inner {
     display: flex;

@@ -20,6 +20,11 @@ class SiteTest extends TestCase
         $this->get('/login')->assertOk();
     }
 
+    public function test_the_footer_links_to_the_source_code(): void
+    {
+        $this->get('/')->assertSee('<a href="https://github.com/Gouw-Waas/gouwwaas.be" rel="noopener">Broncode op GitHub</a>', false);
+    }
+
     public function test_districten_lists_every_group_with_its_website(): void
     {
         $response = $this->get('/districten')->assertOk();
