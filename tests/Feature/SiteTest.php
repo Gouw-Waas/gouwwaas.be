@@ -37,7 +37,7 @@ class SiteTest extends TestCase
         }
     }
 
-    public function test_user_can_log_in_and_is_welcomed(): void
+    public function test_user_can_log_in_and_sees_their_name_on_the_profile_button(): void
     {
         $user = User::factory()->create(['name' => 'Robin']);
 
@@ -45,7 +45,9 @@ class SiteTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertAuthenticatedAs($user);
-        $this->get('/')->assertSeeText('Welkom Robin!');
+        $this->get('/')
+            ->assertSee('<span class="account-name">Robin</span>', false)
+            ->assertDontSeeText('Welkom Robin!');
     }
 
     public function test_wrong_password_is_rejected(): void

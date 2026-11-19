@@ -35,9 +35,11 @@
 
             <div class="account">
                 @auth
-                    <span class="welcome">Welkom <strong>{{ auth()->user()->name }}</strong>!</span>
                     <div class="account-actions">
-                        <a href="{{ route('profiel') }}" @class(['button', 'button-ghost', 'button-small', 'is-active' => request()->routeIs('profiel')])>Profiel</a>
+                        <a href="{{ route('profiel') }}" @class(['button', 'button-ghost', 'button-small', 'account-profile', 'is-active' => request()->routeIs('profiel')]) title="Profiel">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                            <span class="visually-hidden">Profiel van </span><span class="account-name">{{ auth()->user()->name }}</span>
+                        </a>
                         @can('admin')
                             <a href="{{ route('gebruikers.index') }}" @class(['button', 'button-ghost', 'button-small', 'is-active' => request()->routeIs('gebruikers.*')])>Gebruikers</a>
                         @endcan

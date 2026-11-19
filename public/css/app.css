@@ -181,14 +181,11 @@ a:hover { color: var(--olive-dark); }
 .account {
     grid-area: account;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     justify-self: end;
-    gap: 4px;
 }
 
 .account form { margin: 0; }
-.welcome { font-size: .875rem; line-height: 1.3; }
 
 .account-actions {
     display: flex;
@@ -197,16 +194,10 @@ a:hover { color: var(--olive-dark); }
 
 .account-actions .button-small { min-height: 36px; padding: 4px 14px; font-size: .875rem; }
 
-/* Two-row header (logo + account, tabs below) once everything no longer fits on one line */
-@media (max-width: 960px) {
-    .header-inner {
-        grid-template-columns: auto 1fr;
-        grid-template-areas:
-            "brand account"
-            "tabs tabs";
-        padding-bottom: 8px;
-    }
-}
+/* Profile button: person icon and the user's name (long names are cut off). */
+.account-profile { gap: 6px; padding-left: 10px; }
+.account-profile svg { flex: none; }
+.account-name { max-width: 14em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Burger: public/js/nav.js sets .is-compact when the tabs don't fit. The header is then
    only the logo and the burger; the tabs and the login state move to the side menu. */
@@ -232,7 +223,6 @@ a:hover { color: var(--olive-dark); }
 .site-header.is-compact .header-inner {
     grid-template-columns: auto 1fr;
     grid-template-areas: "brand burger";
-    padding-bottom: 10px;
 }
 
 .site-header.is-compact .tabs,
@@ -328,7 +318,8 @@ html:has(.sidenav[open]) { overflow: hidden; }
 
 .sidenav-account .sidenav-links { justify-self: stretch; }
 .sidenav-account form { margin: 0; padding-left: 8px; }
-.sidenav-welcome { margin: 0; padding-left: 16px; overflow-wrap: anywhere; }
+.sidenav-profile { display: flex; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+.sidenav-profile svg { flex: none; }
 .sidenav-account > .button { margin-left: 8px; }
 
 /* Buttons */
@@ -1964,21 +1955,12 @@ select:focus {
 
 /* Mobile */
 @media (max-width: 640px) {
-    html { scroll-padding-top: 130px; }
-    /* Only the logo and the burger: a lower header. */
-    html:has(.site-header.is-compact) { scroll-padding-top: 84px; }
+    /* The header is always one row: logo with tabs, or logo with the burger. */
+    html { scroll-padding-top: 90px; }
 
     .container { padding-left: 16px; padding-right: 16px; }
 
     .brand-logo { height: 48px; }
-
-    .welcome {
-        max-width: 60vw;
-        font-size: .8125rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
 
     .account-actions { gap: 4px; }
     .account-actions .button-small { min-height: 34px; padding: 3px 10px; font-size: .8125rem; }
@@ -2000,7 +1982,7 @@ select:focus {
     .activity-card-title { font-size: 1.1875rem; }
     .user-row { padding: 16px 18px; }
 
-    .tabs { gap: 2px; margin-left: -8px; }
+    .tabs { gap: 2px; }
     .tab { padding: 6px 9px; font-size: .9063rem; }
 
     .hero-logo { max-width: 240px; }

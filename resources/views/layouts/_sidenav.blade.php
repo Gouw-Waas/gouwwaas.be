@@ -21,9 +21,13 @@
         @if ($account ?? false)
             <div class="sidenav-account">
                 @auth
-                    <p class="sidenav-welcome">Welkom <strong>{{ auth()->user()->name }}</strong>!</p>
                     <ul class="sidenav-links">
-                        <li><a href="{{ route('profiel') }}" @class(['sidenav-link', 'active' => request()->routeIs('profiel')])>Profiel</a></li>
+                        <li>
+                            <a href="{{ route('profiel') }}" @class(['sidenav-link', 'sidenav-profile', 'active' => request()->routeIs('profiel')])>
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                                <span><span class="visually-hidden">Profiel van </span>{{ auth()->user()->name }}</span>
+                            </a>
+                        </li>
                         @can('admin')
                             <li><a href="{{ route('gebruikers.index') }}" @class(['sidenav-link', 'active' => request()->routeIs('gebruikers.*')])>Gebruikers</a></li>
                         @endcan
