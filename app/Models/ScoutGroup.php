@@ -23,7 +23,7 @@ class ScoutGroup extends Model
     ];
 
     /**
-     * Akabe ("Anders KAn BEter"), separate from the type. No value: no Akabe.
+     * Akabe ("Anders KAn BEst!"), separate from the type. No value: no Akabe.
      */
     public const AKABE = [
         'groep' => 'Akabegroep',

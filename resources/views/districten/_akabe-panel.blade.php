@@ -3,7 +3,7 @@
 
 <header class="map-panel-header">
     <div>
-        <p class="map-panel-kicker">Anders KAn BEter</p>
+        <p class="map-panel-kicker">Anders KAn BEst!</p>
         <h2 class="map-panel-title" tabindex="-1">Akabe</h2>
         <p class="muted">{{ $akabeGroups->count() }} {{ $akabeGroups->count() === 1 ? 'scoutsgroep' : 'scoutsgroepen' }}</p>
     </div>
