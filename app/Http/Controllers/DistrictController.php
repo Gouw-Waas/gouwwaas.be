@@ -45,11 +45,13 @@ class DistrictController extends Controller
                     'district' => $group->district,
                     'lat' => $group->latitude,
                     'lng' => $group->longitude,
+                    'akabe' => $group->hasAkabe() ? $group->akabe : null,
                 ])->values(),
         ];
 
         return view('districten.index', [
             'districts' => $districts,
+            'akabeGroups' => $districts->flatMap(fn (array $d) => $d['groups'])->filter->hasAkabe()->sortBy('name')->values(),
             'groupCount' => $groups->flatten()->count(),
             'mapData' => $mapData,
         ]);

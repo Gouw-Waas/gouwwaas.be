@@ -43,8 +43,23 @@
                                 </a>
                             </li>
                         @endforeach
+                        @if ($akabeGroups->isNotEmpty())
+                            <li class="district-legend-akabe">
+                                <a href="#akabe" data-select="akabe">
+                                    <span class="legend-ring" aria-hidden="true"></span>
+                                    <span class="legend-name">Akabe</span>
+                                    <span class="muted">{{ $akabeGroups->count() }} {{ $akabeGroups->count() === 1 ? 'groep' : 'groepen' }}</span>
+                                </a>
+                            </li>
+                        @endif
                     </ul>
                 </section>
+
+                @if ($akabeGroups->isNotEmpty())
+                    <section class="map-panel" data-panel="akabe" hidden>
+                        @include('districten._akabe-panel')
+                    </section>
+                @endif
 
                 @foreach ($districts as $district)
                     <section class="map-panel" data-panel="district-{{ $district['key'] }}" style="--district: {{ $district['color'] }}" hidden>
@@ -80,7 +95,7 @@
                             @forelse ($district['groups'] as $group)
                                 <li>
                                     <a href="#{{ $group->anchor() }}" class="group-row" data-select="{{ $group->anchor() }}">
-                                        <span class="group-name">{{ $group->name }}</span>
+                                        <span class="group-name">{{ $group->name }}@include('districten._akabe-badge')</span>
                                         <span class="group-town">{{ $group->city }}</span>
                                     </a>
                                 </li>

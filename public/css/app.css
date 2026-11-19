@@ -736,6 +736,45 @@ a.group-row:hover .group-name { color: var(--olive); }
 }
 
 .legend-name { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+
+/* Akabe: an extra ring around the marker, solid for an Akabegroep, dashed for an Akabetak. */
+.legend-ring {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: radial-gradient(circle, var(--olive) 0 4px, transparent 4.5px);
+}
+
+.legend-ring-dashed { border-style: dashed; }
+
+.legend-dot-akabe { box-shadow: 0 0 0 2px var(--ink); }
+.legend-dot-akabe.is-tak { box-shadow: none; outline: 2px dashed var(--ink); outline-offset: 0; }
+
+.district-legend-akabe { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+.akabe-key {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-size: .9375rem;
+}
+
+.akabe-key li { display: flex; align-items: center; gap: 8px; }
+
+.badge-akabe {
+    margin-left: 8px;
+    padding: 0 8px;
+    background: var(--ink);
+    color: #fff;
+    font-size: .75rem;
+    vertical-align: 1px;
+}
+
+.map-panel-note { display: block; color: var(--muted); font-weight: 400; }
 .district-legend .muted,
 .map-panel-groups .muted { font-size: .875rem; }
 

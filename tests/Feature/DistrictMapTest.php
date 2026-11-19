@@ -174,7 +174,7 @@ class DistrictMapTest extends TestCase
         $data = $this->mapData($response->getContent());
         $this->assertCount(4, $data['districts']);
         $this->assertCount(35, $data['groups']);
-        $this->assertSame(['id', 'name', 'district', 'lat', 'lng'], array_keys($data['groups'][0]));
+        $this->assertSame(['id', 'name', 'district', 'lat', 'lng', 'akabe'], array_keys($data['groups'][0]));
     }
 
     public function test_groups_without_location_are_listed_but_not_on_the_map(): void
@@ -249,9 +249,43 @@ class DistrictMapTest extends TestCase
             'postal_code' => '91000',
             'latitude' => '48.0',
             'website' => 'javascript:alert(1)',
-        ]))->assertSessionHasErrors(['number', 'type', 'district', 'postal_code', 'latitude', 'website']);
+            'akabe' => 'kapoenen',
+        ]))->assertSessionHasErrors(['number', 'type', 'district', 'postal_code', 'latitude', 'website', 'akabe']);
 
         $this->post('/districten/groepen', $this->validGroup(['number' => 'X12']))->assertSessionHasErrors('number');
         $this->post('/districten/groepen', $this->validGroup(['longitude' => '']))->assertSessionHasErrors('longitude');
+    }
+
+    public function test_without_akabe_groups_there_is_no_akabe_legend_or_panel(): void
+    {
+        $response = $this->get('/districten')->assertOk()->assertDontSee('data-panel="akabe"', false);
+
+        $this->assertSame([null], array_values(array_unique(array_column($this->mapData($response->getContent())['groups'], 'akabe'))));
+    }
+
+    public function test_admin_marks_a_group_as_akabe_and_it_shows_on_the_map(): void
+    {
+        $this->actingAs($this->admin());
+        $this->get('/districten/groepen/nieuw')->assertSee('Akabetak');
+
+        $this->post('/districten/groepen', $this->validGroup(['akabe' => 'tak', 'akabe_note' => ' Akabetak De Durpers, 8 tot 25 jaar ']))->assertRedirect();
+        $group = ScoutGroup::where('number', 'O3199G')->sole();
+        $this->assertSame(['tak', 'Akabetak De Durpers, 8 tot 25 jaar'], [$group->akabe, $group->akabe_note]);
+
+        $response = $this->get('/districten')->assertOk()
+            ->assertSee('data-panel="akabe"', false)
+            ->assertSee('data-select="akabe"', false)
+            ->assertSee('1 groep')
+            ->assertSee('Scouts en Gidsen (gemengd) · Akabe')
+            ->assertSee('Akabetak De Durpers, 8 tot 25 jaar')
+            ->assertSee('badge-akabe', false);
+
+        $akabeById = array_column($this->mapData($response->getContent())['groups'], 'akabe', 'id');
+        $this->assertSame('tak', $akabeById['groep-o3199g']);
+
+        // Back to no Akabe: the note goes too.
+        $this->put("/districten/groepen/{$group->id}", $this->validGroup(['number' => 'O3199G', 'akabe' => '', 'akabe_note' => 'blijft hangen']))->assertRedirect();
+        $this->assertSame([null, null], [$group->fresh()->akabe, $group->fresh()->akabe_note]);
+        $this->get('/districten')->assertDontSee('data-panel="akabe"', false);
     }
 }

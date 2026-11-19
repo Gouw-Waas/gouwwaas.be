@@ -3,7 +3,7 @@
 
 <header @class(['map-panel-header', 'has-logo' => $logo = $group->logoUrl()])>
     <div>
-        <p class="map-panel-kicker">{{ $group->typeLabel() }}</p>
+        <p class="map-panel-kicker">{{ $group->typeLabel() }}@if ($group->hasAkabe()) · Akabe @endif</p>
         <h2 class="map-panel-title" tabindex="-1">{{ $group->name }}</h2>
     </div>
     @if ($logo)
@@ -16,6 +16,17 @@
         <dt>Groepsnummer</dt>
         <dd>{{ $group->number }}</dd>
     </div>
+    @if ($group->hasAkabe())
+        <div>
+            <dt>Akabe</dt>
+            <dd>
+                <a href="#akabe" data-select="akabe">{{ $group->akabeLabel() }}</a>
+                @if (filled($group->akabe_note))
+                    <span class="map-panel-note">{{ $group->akabe_note }}</span>
+                @endif
+            </dd>
+        </div>
+    @endif
     <div>
         <dt>Lokaal</dt>
         <dd>

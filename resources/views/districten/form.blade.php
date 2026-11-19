@@ -80,6 +80,43 @@
             </div>
 
             <div class="card">
+                <h2>Akabe</h2>
+                <p class="muted">Staat los van het type. Groepen met Akabe krijgen een extra cirkel op de kaart.</p>
+
+                @php
+                    $akabe = old('akabe', $group->akabe) ?? '';
+                    $akabeOptions = [
+                        '' => ['Geen Akabe', 'Deze groep heeft geen Akabe.'],
+                        'groep' => [\App\Models\ScoutGroup::AKABE['groep'], 'De hele groep is Akabe. Volle cirkel op de kaart.'],
+                        'tak' => [\App\Models\ScoutGroup::AKABE['tak'], 'De groep heeft een Akabetak naast de gewone takken. Gestippelde cirkel op de kaart.'],
+                    ];
+                @endphp
+                <fieldset class="refund-options">
+                    <legend class="visually-hidden">Akabe</legend>
+                    @foreach ($akabeOptions as $value => [$label, $description])
+                        <label class="refund-option">
+                            <input type="radio" name="akabe" value="{{ $value }}" @checked($akabe === $value) data-akabe-option>
+                            <span>
+                                <strong>{{ $label }}</strong>
+                                <span class="muted">{{ $description }}</span>
+                            </span>
+                        </label>
+                    @endforeach
+                </fieldset>
+                @error('akabe')
+                    <p class="error">{{ $message }}</p>
+                @enderror
+
+                <div class="field" data-akabe-note @if ($akabe === '') hidden @endif>
+                    <label for="akabe_note">Toelichting <span class="muted">(optioneel)</span></label>
+                    <input id="akabe_note" type="text" name="akabe_note" value="{{ old('akabe_note', $group->akabe_note) }}" maxlength="255" placeholder="bv. Akabetak De Durpers, 8 tot 25 jaar" @error('akabe_note') aria-invalid="true" aria-describedby="akabe-note-error" @enderror>
+                    @error('akabe_note')
+                        <p class="error" id="akabe-note-error">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="card">
                 <h2>Logo</h2>
                 <p class="muted">Verschijnt rechtsboven in de zijbalk van de groep op de kaart.</p>
                 @include('districten._logo-field', ['logoUrl' => $group->exists ? $group->logoUrl() : null])
@@ -152,6 +189,14 @@
 
     <script src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
     <script nonce="{{ $cspNonce ?? '' }}">
+        (() => {
+            // The Akabe note only makes sense when the group has Akabe.
+            const note = document.querySelector('[data-akabe-note]');
+            document.querySelectorAll('[data-akabe-option]').forEach((radio) => radio.addEventListener('change', () => {
+                note.hidden = radio.value === '';
+            }));
+        })();
+
         (() => {
             const lat = document.querySelector('[data-lat]');
             const lng = document.querySelector('[data-lng]');
