@@ -208,6 +208,129 @@ a:hover { color: var(--olive-dark); }
     }
 }
 
+/* Burger: public/js/nav.js sets .is-compact when the tabs don't fit. The header is then
+   only the logo and the burger; the tabs and the login state move to the side menu. */
+.burger {
+    display: none;
+    grid-area: burger;
+    justify-self: end;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 6px 16px 6px 12px;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.burger:hover { background: var(--lime-light); border-color: var(--lime); }
+
+.site-header.is-compact .header-inner {
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "brand burger";
+    padding-bottom: 10px;
+}
+
+.site-header.is-compact .tabs,
+.site-header.is-compact .account { display: none; }
+.site-header.is-compact .burger { display: inline-flex; }
+
+/* Side menu (a modal <dialog>), sliding in from the right. */
+.sidenav {
+    width: min(320px, 86vw);
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: -8px 0 32px rgba(31, 36, 8, .18);
+    transition: transform .25s ease, overlay .25s allow-discrete, display .25s allow-discrete;
+}
+
+.sidenav[open] { transform: none; }
+.sidenav:not([open]) { transform: translateX(100%); }
+
+@starting-style {
+    .sidenav[open] { transform: translateX(100%); }
+}
+
+.sidenav::backdrop { background: rgba(31, 36, 8, .45); }
+
+html:has(.sidenav[open]) { overflow: hidden; }
+
+.sidenav-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 100%;
+    padding: 16px 16px 24px;
+}
+
+.sidenav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-left: 8px;
+}
+
+.sidenav-title { margin: 0; font-size: 1.375rem; }
+
+.sidenav-close {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.sidenav-close:hover { background: var(--lime-light); }
+
+.sidenav-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.sidenav-link {
+    display: block;
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: var(--ink);
+    font-size: 1.0625rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.sidenav-link:hover { background: var(--lime-light); color: var(--ink); }
+.sidenav-link.active { background: var(--lime); }
+
+.sidenav-account {
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.sidenav-account .sidenav-links { justify-self: stretch; }
+.sidenav-account form { margin: 0; padding-left: 8px; }
+.sidenav-welcome { margin: 0; padding-left: 16px; overflow-wrap: anywhere; }
+.sidenav-account > .button { margin-left: 8px; }
+
 /* Buttons */
 .button {
     display: inline-flex;
@@ -1842,6 +1965,8 @@ select:focus {
 /* Mobile */
 @media (max-width: 640px) {
     html { scroll-padding-top: 130px; }
+    /* Only the logo and the burger: a lower header. */
+    html:has(.site-header.is-compact) { scroll-padding-top: 84px; }
 
     .container { padding-left: 16px; padding-right: 16px; }
 

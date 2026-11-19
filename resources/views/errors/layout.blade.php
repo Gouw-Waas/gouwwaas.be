@@ -12,19 +12,17 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
 </head>
 <body>
-    <header class="site-header">
+    <header class="site-header" data-site-header>
         <div class="container header-inner">
             <a href="{{ url('/') }}" class="brand">
                 <img src="{{ asset('images/logo-200.webp') }}" alt="Gouw Waas – Scouts en Gidsen Vlaanderen" class="brand-logo" width="200" height="144">
             </a>
-            <nav class="tabs" aria-label="Hoofdmenu">
-                <a href="{{ url('/') }}" class="tab">Home</a>
-                <a href="{{ url('/districten') }}" class="tab">Districten</a>
-                <a href="{{ url('/wie-is-wie') }}" class="tab">Wie is wie</a>
-                <a href="{{ url('/activiteiten') }}" class="tab">Activiteiten</a>
-            </nav>
+            @include('layouts._tabs')
         </div>
     </header>
+    {{-- No login state here (see above), so the side menu only has the tabs. --}}
+    @include('layouts._sidenav')
+    <script src="{{ asset('js/nav.js') }}?v={{ filemtime(public_path('js/nav.js')) }}"></script>
 
     <main id="content" class="error-page">
         <div class="container">
