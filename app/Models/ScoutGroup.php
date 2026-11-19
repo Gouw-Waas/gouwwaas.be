@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 /**
  * A scouting group of the gouw, on the map on /districten. Admins manage them.
  */
-#[Fillable(['district', 'number', 'name', 'type', 'street', 'postal_code', 'city', 'latitude', 'longitude', 'website'])]
+#[Fillable(['district', 'number', 'name', 'type', 'akabe', 'akabe_note', 'street', 'postal_code', 'city', 'latitude', 'longitude', 'website'])]
 class ScoutGroup extends Model
 {
     use HasLogo;
@@ -20,6 +20,14 @@ class ScoutGroup extends Model
         'scouts' => 'Scouts',
         'gidsen' => 'Gidsen',
         'zeescouts' => 'Zeescouts',
+    ];
+
+    /**
+     * Akabe ("Anders KAn BEst!"), separate from the type. No value: no Akabe.
+     */
+    public const AKABE = [
+        'groep' => 'Akabegroep',
+        'tak' => 'Akabetak',
     ];
 
     protected function casts(): array
@@ -46,6 +54,16 @@ class ScoutGroup extends Model
     public function typeLabel(): string
     {
         return self::TYPES[$this->type] ?? $this->type;
+    }
+
+    public function hasAkabe(): bool
+    {
+        return isset(self::AKABE[$this->akabe]);
+    }
+
+    public function akabeLabel(): ?string
+    {
+        return self::AKABE[$this->akabe] ?? null;
     }
 
     public function hasLocation(): bool

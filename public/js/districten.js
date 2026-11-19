@@ -1,11 +1,12 @@
 /*
  * The map on /districten (Leaflet).
  *
- * - One marker per scouting group, in its district's colour.
+ * - One marker per scouting group, in its district's colour. Groups with Akabe get an
+ *   extra ring around it: solid for an Akabegroep, dashed for an Akabetak.
  * - District outlines from config/gouw.php (boundary), when they are filled in.
  * - Clicking a marker, outline or any [data-select] link shows that panel in the
  *   sidebar. The panels themselves are rendered by the server.
- * - The selection is kept in the address (#groep-o3101g, #district-klaas), so it can be shared.
+ * - The selection is kept in the address (#groep-o3101g, #district-klaas, #akabe), so it can be shared.
  */
 (() => {
     const data = window.districtMap;
@@ -17,6 +18,7 @@
     }
 
     const OVERVIEW = 'overzicht';
+    const AKABE = 'akabe';
     const colors = Object.fromEntries(data.districts.map((d) => [d.key, d.color]));
     const panels = new Map([...sidebar.querySelectorAll('[data-panel]')].map((p) => [p.dataset.panel, p]));
 
@@ -62,12 +64,25 @@
         opacity: state === 'dimmed' ? 0.5 : 1,
     });
 
+    // The Akabe ring sits just outside the marker's white border, so it grows with the marker.
+    const ringStyle = (group, state) => ({
+        radius: state === 'selected' ? 16 : 12,
+        color: '#1f2408',
+        weight: 2,
+        dashArray: group.akabe === 'tak' ? '3 3' : null,
+        fill: false,
+        opacity: state === 'dimmed' ? 0.35 : 1,
+    });
+
     const markers = new Map();
     data.groups.forEach((group) => {
+        const ring = group.akabe
+            ? L.circleMarker([group.lat, group.lng], { ...ringStyle(group, 'normal'), interactive: false }).addTo(map)
+            : null;
         const marker = L.circleMarker([group.lat, group.lng], markerStyle(group, 'normal')).addTo(map);
-        marker.bindTooltip(group.name, { direction: 'top', offset: [0, -8] });
+        marker.bindTooltip(group.akabe ? `${group.name} · Akabe` : group.name, { direction: 'top', offset: [0, -8] });
         marker.on('click', () => select(group.id));
-        markers.set(group.id, { marker, group });
+        markers.set(group.id, { marker, ring, group });
     });
 
     const allBounds = () => {
@@ -80,13 +95,19 @@
     // Selection
     let current = OVERVIEW;
 
-    function styleMarkers(selectedId, district) {
-        markers.forEach(({ marker, group }) => {
+    // highlight: which groups stay at full strength (null: all of them).
+    function styleMarkers(selectedId, district, highlight = null) {
+        markers.forEach(({ marker, ring, group }) => {
             let state = 'normal';
             if (group.id === selectedId) state = 'selected';
             else if (district && group.district !== district) state = 'dimmed';
+            else if (highlight && ! highlight(group)) state = 'dimmed';
             marker.setStyle(markerStyle(group, state));
-            if (state === 'selected') marker.bringToFront();
+            if (ring) ring.setStyle(ringStyle(group, state));
+            if (state === 'selected') {
+                if (ring) ring.bringToFront();
+                marker.bringToFront();
+            }
         });
         outlines.forEach((outline, key) => outline.setStyle({
             fillOpacity: district === key ? 0.16 : 0.08,
@@ -111,6 +132,10 @@
             styleMarkers(null, key);
             const layers = [...markers.values()].filter((m) => m.group.district === key).map((m) => m.marker);
             if (outlines.has(key)) layers.push(outlines.get(key));
+            if (layers.length) map.flyToBounds(L.featureGroup(layers).getBounds(), { padding: [40, 40], maxZoom: 14, duration: 0.6 });
+        } else if (id === AKABE) {
+            styleMarkers(null, null, (group) => !! group.akabe);
+            const layers = [...markers.values()].filter((m) => m.group.akabe).map((m) => m.marker);
             if (layers.length) map.flyToBounds(L.featureGroup(layers).getBounds(), { padding: [40, 40], maxZoom: 14, duration: 0.6 });
         } else {
             styleMarkers(null, null);

@@ -73,6 +73,8 @@ class ScoutGroupController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'number' => ['required', 'regex:/^[A-Z]\d{4}[A-Z]$/', Rule::unique('scout_groups', 'number')->ignore($group)],
             'type' => ['required', Rule::in(array_keys(ScoutGroup::TYPES))],
+            'akabe' => ['nullable', Rule::in(array_keys(ScoutGroup::AKABE))],
+            'akabe_note' => ['nullable', 'string', 'max:255'],
             'district' => ['required', Rule::in(array_keys(ScoutGroup::districts()))],
             'street' => ['required', 'string', 'max:255'],
             'postal_code' => ['required', 'regex:/^\d{4}$/'],
@@ -97,11 +99,15 @@ class ScoutGroupController extends Controller
             'street' => 'straat en nummer',
             'postal_code' => 'postcode',
             'city' => 'gemeente',
+            'akabe_note' => 'toelichting',
             'latitude' => 'locatie',
             'longitude' => 'locatie',
         ]);
 
         $validated['website'] = filled($validated['website'] ?? null) ? $validated['website'] : null;
+        $validated['akabe'] = filled($validated['akabe'] ?? null) ? $validated['akabe'] : null;
+        // A note without Akabe would show nowhere; drop it rather than keep it hidden.
+        $validated['akabe_note'] = $validated['akabe'] && filled($validated['akabe_note'] ?? null) ? trim($validated['akabe_note']) : null;
 
         return Arr::except($validated, ['logo', 'remove_logo']);
     }

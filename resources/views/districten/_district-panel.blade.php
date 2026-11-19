@@ -29,7 +29,7 @@
             <li>
                 <a href="#{{ $group->anchor() }}" data-select="{{ $group->anchor() }}">
                     <span class="legend-dot" aria-hidden="true"></span>
-                    <span class="legend-name">{{ $group->name }}</span>
+                    <span class="legend-name">{{ $group->name }}@include('districten._akabe-badge')</span>
                     <span class="muted">{{ $group->city }}</span>
                 </a>
             </li>
