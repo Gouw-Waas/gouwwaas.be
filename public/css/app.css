@@ -181,14 +181,11 @@ a:hover { color: var(--olive-dark); }
 .account {
     grid-area: account;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     justify-self: end;
-    gap: 4px;
 }
 
 .account form { margin: 0; }
-.welcome { font-size: .875rem; line-height: 1.3; }
 
 .account-actions {
     display: flex;
@@ -197,16 +194,133 @@ a:hover { color: var(--olive-dark); }
 
 .account-actions .button-small { min-height: 36px; padding: 4px 14px; font-size: .875rem; }
 
-/* Two-row header (logo + account, tabs below) once everything no longer fits on one line */
-@media (max-width: 960px) {
-    .header-inner {
-        grid-template-columns: auto 1fr;
-        grid-template-areas:
-            "brand account"
-            "tabs tabs";
-        padding-bottom: 8px;
-    }
+/* Profile button: person icon and the user's name (long names are cut off). */
+.account-profile { gap: 6px; padding-left: 10px; }
+.account-profile svg { flex: none; }
+.account-name { max-width: 14em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Burger: public/js/nav.js sets .is-compact when the tabs don't fit. The header is then
+   only the logo and the burger; the tabs and the login state move to the side menu. */
+.burger {
+    display: none;
+    grid-area: burger;
+    justify-self: end;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 6px 16px 6px 12px;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
 }
+
+.burger:hover { background: var(--lime-light); border-color: var(--lime); }
+
+.site-header.is-compact .header-inner {
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "brand burger";
+}
+
+.site-header.is-compact .tabs,
+.site-header.is-compact .account { display: none; }
+.site-header.is-compact .burger { display: inline-flex; }
+
+/* Side menu (a modal <dialog>), sliding in from the right. */
+.sidenav {
+    width: min(320px, 86vw);
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: -8px 0 32px rgba(31, 36, 8, .18);
+    transition: transform .25s ease, overlay .25s allow-discrete, display .25s allow-discrete;
+}
+
+.sidenav[open] { transform: none; }
+.sidenav:not([open]) { transform: translateX(100%); }
+
+@starting-style {
+    .sidenav[open] { transform: translateX(100%); }
+}
+
+.sidenav::backdrop { background: rgba(31, 36, 8, .45); }
+
+html:has(.sidenav[open]) { overflow: hidden; }
+
+.sidenav-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 100%;
+    padding: 16px 16px 24px;
+}
+
+.sidenav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-left: 8px;
+}
+
+.sidenav-title { margin: 0; font-size: 1.375rem; }
+
+.sidenav-close {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.sidenav-close:hover { background: var(--lime-light); }
+
+.sidenav-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.sidenav-link {
+    display: block;
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: var(--ink);
+    font-size: 1.0625rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.sidenav-link:hover { background: var(--lime-light); color: var(--ink); }
+.sidenav-link.active { background: var(--lime); }
+
+.sidenav-account {
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.sidenav-account .sidenav-links { justify-self: stretch; }
+.sidenav-account form { margin: 0; padding-left: 8px; }
+.sidenav-profile { display: flex; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+.sidenav-profile svg { flex: none; }
+.sidenav-account > .button { margin-left: 8px; }
 
 /* Buttons */
 .button {
@@ -1841,19 +1955,12 @@ select:focus {
 
 /* Mobile */
 @media (max-width: 640px) {
-    html { scroll-padding-top: 130px; }
+    /* The header is always one row: logo with tabs, or logo with the burger. */
+    html { scroll-padding-top: 90px; }
 
     .container { padding-left: 16px; padding-right: 16px; }
 
     .brand-logo { height: 48px; }
-
-    .welcome {
-        max-width: 60vw;
-        font-size: .8125rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
 
     .account-actions { gap: 4px; }
     .account-actions .button-small { min-height: 34px; padding: 3px 10px; font-size: .8125rem; }
@@ -1875,7 +1982,7 @@ select:focus {
     .activity-card-title { font-size: 1.1875rem; }
     .user-row { padding: 16px 18px; }
 
-    .tabs { gap: 2px; margin-left: -8px; }
+    .tabs { gap: 2px; }
     .tab { padding: 6px 9px; font-size: .9063rem; }
 
     .hero-logo { max-width: 240px; }

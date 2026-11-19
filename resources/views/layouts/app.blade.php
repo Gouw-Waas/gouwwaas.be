@@ -25,24 +25,21 @@
 <body>
     <a href="#content" class="skip-link">Naar de inhoud</a>
 
-    <header class="site-header">
+    <header class="site-header" data-site-header>
         <div class="container header-inner">
             <a href="{{ route('home') }}" class="brand">
                 <img src="{{ asset('images/logo-200.webp') }}" alt="Gouw Waas – Scouts en Gidsen Vlaanderen" class="brand-logo" width="200" height="144">
             </a>
 
-            <nav class="tabs" aria-label="Hoofdmenu">
-                <a href="{{ route('home') }}" @class(['tab', 'active' => request()->routeIs('home')]) @if (request()->routeIs('home')) aria-current="page" @endif>Home</a>
-                <a href="{{ route('districten') }}" @class(['tab', 'active' => request()->routeIs('districten')]) @if (request()->routeIs('districten')) aria-current="page" @endif>Districten</a>
-                <a href="{{ route('wie-is-wie') }}" @class(['tab', 'active' => request()->routeIs('wie-is-wie')]) @if (request()->routeIs('wie-is-wie')) aria-current="page" @endif>Wie is wie</a>
-                <a href="{{ route('activiteiten.index') }}" @class(['tab', 'active' => request()->routeIs('activiteiten.*')]) @if (request()->routeIs('activiteiten.*')) aria-current="page" @endif>Activiteiten</a>
-            </nav>
+            @include('layouts._tabs')
 
             <div class="account">
                 @auth
-                    <span class="welcome">Welkom <strong>{{ auth()->user()->name }}</strong>!</span>
                     <div class="account-actions">
-                        <a href="{{ route('profiel') }}" @class(['button', 'button-ghost', 'button-small', 'is-active' => request()->routeIs('profiel')])>Profiel</a>
+                        <a href="{{ route('profiel') }}" @class(['button', 'button-ghost', 'button-small', 'account-profile', 'is-active' => request()->routeIs('profiel')]) title="Profiel">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                            <span class="visually-hidden">Profiel van </span><span class="account-name">{{ auth()->user()->name }}</span>
+                        </a>
                         @can('admin')
                             <a href="{{ route('gebruikers.index') }}" @class(['button', 'button-ghost', 'button-small', 'is-active' => request()->routeIs('gebruikers.*')])>Gebruikers</a>
                         @endcan
@@ -57,6 +54,9 @@
             </div>
         </div>
     </header>
+    @include('layouts._sidenav', ['account' => true])
+    {{-- Right after the header, so a phone never shows the tabs before the burger. --}}
+    <script src="{{ asset('js/nav.js') }}?v={{ filemtime(public_path('js/nav.js')) }}"></script>
 
     {{-- Floats above the page and fades out after 3 seconds (CSS only); hovering pauses it. --}}
     @if (session('status'))
