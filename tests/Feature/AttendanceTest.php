@@ -79,28 +79,16 @@ class AttendanceTest extends TestCase
         $this->assertNull($jan->fresh()->present_at);
     }
 
-    public function test_everyone_present_only_marks_confirmed_registrations(): void
+    public function test_bulk_attendance_needs_a_selection(): void
     {
+        // "Iedereen aanwezig" is gone: select all, then Aanwezig in the selection bar.
         $this->actingAs($this->activity->user)
-            ->post("/activiteiten/{$this->activity->slug}/aanwezig")
-            ->assertRedirect()
-            ->assertSessionHas('status', '2 deelnemers aangeduid als aanwezig.');
+            ->post("/activiteiten/{$this->activity->slug}/aanwezig", ['present' => '1'])
+            ->assertSessionHasErrors('ids');
 
-        $this->assertTrue($this->registrations['Jan']->fresh()->isPresent());
-        $this->assertTrue($this->registrations['Piet']->fresh()->isPresent());
-        $this->assertFalse($this->registrations['Joris']->fresh()->isPresent());
-    }
-
-    public function test_everyone_present_keeps_existing_times(): void
-    {
-        $yesterday = now()->subDay()->startOfSecond();
-        $this->registrations['Jan']->forceFill(['present_at' => $yesterday])->save();
-
-        $this->actingAs($this->activity->user)
-            ->post("/activiteiten/{$this->activity->slug}/aanwezig")
-            ->assertSessionHas('status', '1 deelnemer aangeduid als aanwezig.');
-
-        $this->assertTrue($this->registrations['Jan']->fresh()->present_at->equalTo($yesterday));
+        foreach ($this->registrations as $registration) {
+            $this->assertFalse($registration->fresh()->isPresent());
+        }
     }
 
     public function test_unconfirmed_registration_can_be_ticked_by_hand(): void
@@ -122,21 +110,15 @@ class AttendanceTest extends TestCase
         $this->assertNull($stranger->fresh()->present_at);
     }
 
-    public function test_attendance_toolbar_counts_and_hides_everyone_present_when_done(): void
+    public function test_no_attendance_toolbar_select_all_and_the_selection_bar_do_that(): void
     {
-        $url = "/activiteiten/{$this->activity->slug}/inschrijvingen";
         $this->registrations['Jan']->forceFill(['present_at' => now()])->save();
 
-        $this->actingAs($this->activity->user)->get($url)
-            ->assertSeeText('1 van 3 aanwezig')
-            ->assertSee('Iedereen aanwezig');
-
-        $this->registrations['Piet']->forceFill(['present_at' => now()])->save();
-
-        // Every confirmed registration is ticked: nothing left for the button to do.
-        $this->actingAs($this->activity->user)->get($url)
-            ->assertSeeText('2 van 3 aanwezig')
-            ->assertDontSee('Iedereen aanwezig');
+        $this->actingAs($this->activity->user)->get("/activiteiten/{$this->activity->slug}/inschrijvingen")
+            ->assertDontSee('Iedereen aanwezig')
+            ->assertDontSeeText('1 van 3 aanwezig')
+            // No vormingsuren: no certificates either, so no toolbar at all.
+            ->assertDontSee('registrations-toolbar');
     }
 
     public function test_selection_marks_exactly_those_including_unconfirmed(): void
@@ -184,7 +166,6 @@ class AttendanceTest extends TestCase
             ->get("/activiteiten/{$this->activity->slug}/inschrijvingen")
             ->assertOk()
             ->assertSee('Aanwezig')
-            ->assertSee('Iedereen aanwezig')
             ->assertSee('Jan aanwezig');
 
         $content = $this->actingAs($this->activity->user)
