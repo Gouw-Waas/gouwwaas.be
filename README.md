@@ -168,9 +168,9 @@ still have to pay. It counts the price each registration paid; cancelled registr
 are removed, so refunds (and administrative costs kept back) are not in it.
 
 **Attendance.** The registrations overview has an "Aanwezig" checkbox per registrant
-(saved straight away) and an "Iedereen aanwezig" button that ticks every confirmed
-registration; unconfirmed ones (payment not finished) can only be ticked by hand. The
-Excel export has an "Aanwezig" column. Stored as `registrations.present_at`.
+(saved straight away, without reloading). To mark many people at once, select them
+(or "select all") and use Aanwezig in the selection bar. The Excel export has an
+"Aanwezig" column. Stored as `registrations.present_at`.
 
 **Filtering, sorting and selecting.** Above the table: search by name or e-mail
 (accents don't matter), filters for Aanwezig, Betaling and every question (a dropdown for
@@ -203,9 +203,9 @@ privacy page and as the location placeholder); the Karree page should use it too
 both branches are on `main`. Without a stamp or a Gouwcommissaris, no certificates can
 be made and the overview says why.
 
-**Mailing participants.** "Deelnemers mailen" in the overview sends a message to every
-participant (optionally also to those who never finished paying), one e-mail per
-address so nobody sees the others' addresses. The activity's date, place and link are
+**Mailing participants.** Select people in the overview (or "select all") and choose
+Mailen in the selection bar: the message goes to exactly those people (paid or not), one
+e-mail per address so nobody sees the others' addresses. The activity's date, place and link are
 added below the message, replies go to the organiser who sent it, and they can get a
 copy. Sent straight away, like all mail (no queue worker).
 

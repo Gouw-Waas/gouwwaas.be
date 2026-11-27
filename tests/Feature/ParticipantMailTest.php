@@ -32,15 +32,38 @@ class ParticipantMailTest extends TestCase
         $add('Joris', 'joris@example.com', 'expired'); // never finished paying
     }
 
+    /** @return array<int, int> */
+    private function everyone(): array
+    {
+        return $this->activity->registrations()->pluck('id')->all();
+    }
+
     public function test_only_the_organiser_or_an_admin_can_mail_participants(): void
     {
         $url = "/activiteiten/{$this->activity->slug}/deelnemers-mailen";
+        $query = $url.'?'.http_build_query(['ids' => [$this->id('Jan'), $this->id('Piet')]]);
 
-        $this->get($url)->assertRedirect('/login');
-        $this->actingAs(User::factory()->create())->get($url)->assertForbidden();
-        $this->actingAs(User::factory()->create())->post($url, ['subject' => 'Hoi', 'message' => 'Test'])->assertForbidden();
+        $this->get($query)->assertRedirect('/login');
+        $this->actingAs(User::factory()->create())->get($query)->assertForbidden();
+        $this->actingAs(User::factory()->create())->post($url, ['subject' => 'Hoi', 'message' => 'Test', 'ids' => [$this->id('Jan')]])->assertForbidden();
 
-        $this->actingAs($this->activity->user)->get($url)->assertOk()->assertSee('2 deelnemers');
+        $this->actingAs($this->activity->user)->get($query)->assertOk()->assertSee('2 geselecteerde deelnemers');
+
+        Mail::assertNothingSent();
+    }
+
+    public function test_without_a_selection_there_is_nothing_to_mail(): void
+    {
+        $url = "/activiteiten/{$this->activity->slug}/deelnemers-mailen";
+
+        // Mailing starts from the overview: select people, then Mailen.
+        $this->actingAs($this->activity->user)->get($url)
+            ->assertRedirect("/activiteiten/{$this->activity->slug}/inschrijvingen")
+            ->assertSessionHas('status', 'Selecteer eerst wie je wilt mailen.');
+
+        $this->actingAs($this->activity->user)
+            ->post($url, ['subject' => 'Hoi', 'message' => 'Test', 'send_copy' => '0'])
+            ->assertSessionHasErrors(['message' => 'Er is niemand om te mailen.']);
 
         Mail::assertNothingSent();
     }
@@ -54,6 +77,7 @@ class ParticipantMailTest extends TestCase
                 'subject' => 'Praktische info',
                 'message' => "Dag allemaal,\n\nVergeet je <slaapzak> niet!",
                 'send_copy' => '0',
+                'ids' => [$this->id('Jan'), $this->id('Jan (broer)'), $this->id('Piet')],
             ])
             ->assertRedirect("/activiteiten/{$this->activity->slug}/inschrijvingen")
             ->assertSessionHas('status', 'Je bericht is verstuurd naar 2 deelnemers.');
@@ -70,7 +94,7 @@ class ParticipantMailTest extends TestCase
         $this->assertStringNotContainsString('<slaapzak>', $html);
     }
 
-    public function test_unconfirmed_registrations_and_a_copy_on_request(): void
+    public function test_a_copy_on_request(): void
     {
         $organiser = $this->activity->user;
 
@@ -78,8 +102,8 @@ class ParticipantMailTest extends TestCase
             ->post("/activiteiten/{$this->activity->slug}/deelnemers-mailen", [
                 'subject' => 'Nog plaats',
                 'message' => 'Er is nog plaats, rond je betaling af.',
-                'include_unconfirmed' => '1',
                 'send_copy' => '1',
+                'ids' => $this->everyone(),
             ])
             ->assertSessionHas('status', 'Je bericht is verstuurd naar 3 deelnemers.');
 
@@ -92,7 +116,7 @@ class ParticipantMailTest extends TestCase
     public function test_subject_and_message_are_required(): void
     {
         $this->actingAs($this->activity->user)
-            ->post("/activiteiten/{$this->activity->slug}/deelnemers-mailen", ['subject' => '', 'message' => ''])
+            ->post("/activiteiten/{$this->activity->slug}/deelnemers-mailen", ['subject' => '', 'message' => '', 'ids' => $this->everyone()])
             ->assertSessionHasErrors(['subject', 'message']);
 
         Mail::assertNothingSent();
@@ -157,11 +181,12 @@ class ParticipantMailTest extends TestCase
     {
         // Selected on the overview, then cancelled in another tab before sending.
         $url = "/activiteiten/{$this->activity->slug}/deelnemers-mailen";
-        $html = $this->actingAs($this->activity->user)->get($url.'?ids[]=999999')->assertOk()->getContent();
-        $this->assertStringContainsString('name="selection" value="1"', $html);
+        $this->actingAs($this->activity->user)->get($url.'?ids[]=999999')
+            ->assertOk()
+            ->assertSee('Niemand van de selectie staat nog ingeschreven.');
 
         $this->actingAs($this->activity->user)
-            ->post($url, ['subject' => 'Hoi', 'message' => 'Test', 'send_copy' => '0', 'selection' => '1'])
+            ->post($url, ['subject' => 'Hoi', 'message' => 'Test', 'send_copy' => '0', 'ids' => [999999]])
             ->assertSessionHasErrors(['message' => 'Er is niemand om te mailen.']);
 
         Mail::assertNothingSent();
