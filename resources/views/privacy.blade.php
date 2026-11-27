@@ -47,10 +47,11 @@
                     Deze website is van <strong>Gouw Waas</strong>, een gouw van Scouts en Gidsen Vlaanderen vzw. Gouw Waas is
                     verantwoordelijk voor de gegevens die via deze website verwerkt worden.
                 </p>
+                @php($organisation = config('gouw.organisation'))
                 <address class="privacy-address">
-                    Gouw Waas · Gouwhuis Karree<br>
-                    Apostelstraat 5, 9100 Sint-Niklaas<br>
-                    <a href="mailto:gouwbureau@gouwwaas.be">gouwbureau@gouwwaas.be</a>
+                    {{ $organisation['name'] }} · {{ $organisation['building'] }}<br>
+                    {{ $organisation['street'] }}, {{ $organisation['city'] }}<br>
+                    <a href="mailto:{{ $organisation['email'] }}">{{ $organisation['email'] }}</a>
                 </address>
                 <p>
                     Je ledenadministratie (als lid of leiding van een scoutsgroep) loopt <strong>niet</strong> via deze website,

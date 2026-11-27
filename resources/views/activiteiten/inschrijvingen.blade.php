@@ -52,6 +52,9 @@
         @error('cancel')
             <p class="flash flash-error" role="alert">{{ $message }}</p>
         @enderror
+        @error('certificate')
+            <p class="flash flash-error" role="alert">{{ $message }}</p>
+        @enderror
         @if ($errors->hasAny(['refund', 'admin_cost']))
             <p class="flash flash-error" role="alert">{{ $errors->first('refund') ?: $errors->first('admin_cost') }}</p>
         @endif
@@ -110,6 +113,9 @@
                                     <td>{{ $registration->answerFor($column['id']) }}</td>
                                 @endforeach
                                 <td class="nowrap">
+                                    @if ($activity->hasCertificates() && $registration->isPresent() && $registration->isConfirmed())
+                                        <a href="{{ route('activiteiten.attest', [$activity, $registration->id]) }}" class="button button-ghost button-small">Attest</a>
+                                    @endif
                                     @include('activiteiten._cancel-registration', ['registration' => $registration])
                                 </td>
                             </tr>

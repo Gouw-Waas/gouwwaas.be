@@ -9,6 +9,20 @@
 return [
 
     /*
+    | The organisation: printed on participation certificates (attesten) and shown on the
+    | privacy page. logo: relative to public/, a PNG (the PDF library can't read webp).
+    */
+    'organisation' => [
+        'name' => 'Gouw Waas',
+        'full_name' => 'Gouw Waas – Scouts en Gidsen Vlaanderen',
+        'building' => 'Gouwhuis Karree',
+        'street' => 'Apostelstraat 5',
+        'city' => '9100 Sint-Niklaas',
+        'email' => 'gouwbureau@gouwwaas.be',
+        'logo' => 'images/logo-600.png',
+    ],
+
+    /*
     | The three fixed functions of the gouwbureau: key => [title, default description].
     | Admins edit the description, people and contact details on /wie-is-wie;
     | the titles and the order come from here.
