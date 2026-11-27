@@ -86,7 +86,7 @@ class CertificateRenderer
         ]);
         $activity->slug = 'voorbeeld';
 
-        $registration = new Registration(['name' => 'Voornaam Achternaam']);
+        $registration = new Registration(['name' => 'Voornaam Achternaam', 'amount_cents' => 1500]);
         $registration->setRelation('activity', $activity);
 
         return $registration;
@@ -110,6 +110,8 @@ class CertificateRenderer
             'activity' => $activity,
             'registration' => $registration,
             'organiser' => $organiser,
+            // What the participant paid (0 = free); null for an external activity without a price.
+            'price' => $registration->amount_cents,
             'organisation' => Organisation::current(),
             'signers' => $this->signers(),
             'stamp' => Stamp::dataUri(),

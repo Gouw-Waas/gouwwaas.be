@@ -72,6 +72,16 @@ class CertificateTest extends TestCase
         );
     }
 
+    public function test_certificate_states_the_price_paid(): void
+    {
+        $text = fn (Registration $registration) => preg_replace('/\s+/', ' ', strip_tags($this->renderer()->html($registration)));
+
+        $this->assertStringContainsString('De deelname was gratis.', $text($this->zoe->fresh()));
+
+        $this->zoe->forceFill(['amount_cents' => 1250])->save();
+        $this->assertStringContainsString('Het deelnamegeld bedroeg € 12,50.', $text($this->zoe->fresh()));
+    }
+
     public function test_single_day_reads_op(): void
     {
         $this->activity->update(['ends_at' => Carbon::parse('2026-12-12 17:00')]);

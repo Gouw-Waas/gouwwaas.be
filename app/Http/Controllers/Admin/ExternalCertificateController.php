@@ -30,7 +30,7 @@ class ExternalCertificateController extends Controller
      */
     public const MAX_PARTICIPANTS = 100;
 
-    private const ACTIVITY_FIELDS = ['title', 'location', 'starts_on', 'ends_on', 'training_hours', 'organiser'];
+    private const ACTIVITY_FIELDS = ['title', 'location', 'starts_on', 'ends_on', 'training_hours', 'price', 'organiser'];
 
     public function edit(CertificateRenderer $renderer): View
     {
@@ -46,12 +46,14 @@ class ExternalCertificateController extends Controller
             'starts_on' => ['required', 'date_format:Y-m-d'],
             'ends_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:starts_on'],
             'training_hours' => ['required', 'regex:/^\d{1,2}([.,][05])?$/', 'not_regex:/^0+([.,]0)?$/'],
+            'price' => ['nullable', 'regex:/^\d{1,4}([.,]\d{1,2})?$/'],
             'organiser' => ['nullable', 'string', 'max:255'],
             'participants' => ['nullable', 'string'],
             'file' => ['nullable', 'file', 'mimes:csv,txt', 'max:1024'],
         ], [
             'training_hours.regex' => $hoursMessage,
             'training_hours.not_regex' => $hoursMessage,
+            'price.regex' => 'Vul een bedrag in euro in, bv. 25 of 12,50 (0 voor gratis).',
             'ends_on.after_or_equal' => 'De einddatum kan niet voor de startdatum liggen.',
         ], [
             'title' => 'titel',
@@ -59,6 +61,7 @@ class ExternalCertificateController extends Controller
             'starts_on' => 'startdatum',
             'ends_on' => 'einddatum',
             'training_hours' => 'vormingsuren',
+            'price' => 'deelnameprijs',
             'organiser' => 'georganiseerd door',
             'participants' => 'deelnemers',
             'file' => 'bestand',
@@ -104,6 +107,7 @@ class ExternalCertificateController extends Controller
         ]);
         $activity->slug = Str::slug($activity->title) ?: 'activiteit';
         $organiser = filled($validated['organiser'] ?? null) ? $validated['organiser'] : null;
+        $priceCents = filled($validated['price'] ?? null) ? (int) round((float) str_replace(',', '.', $validated['price']) * 100) : null;
 
         // Sent straight away (no queue worker in production): give large groups the time they need.
         set_time_limit(max(120, count($list->participants) * 2));
@@ -111,7 +115,7 @@ class ExternalCertificateController extends Controller
         $sent = 0;
         $failed = [];
         foreach ($list->participants as $participant) {
-            $registration = new Registration(['name' => $participant['name'], 'email' => $participant['email']]);
+            $registration = new Registration(['name' => $participant['name'], 'email' => $participant['email'], 'amount_cents' => $priceCents]);
             $registration->setRelation('activity', $activity);
 
             try {
