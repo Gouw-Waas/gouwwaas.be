@@ -93,26 +93,92 @@
                 @endif
             </div>
 
+            {{-- Filtering, sorting and selecting: public/js/registrations.js reveals these (hidden without JS). --}}
+            <div class="registrations-filters" data-filters hidden>
+                <div class="filter-field filter-search">
+                    <label for="filter-search" class="visually-hidden">Zoeken</label>
+                    <input id="filter-search" type="search" placeholder="Zoek op naam of e-mail" data-filter="search" data-match="contains">
+                </div>
+                <div class="filter-field">
+                    <label for="filter-present">Aanwezig</label>
+                    <select id="filter-present" data-filter="present" data-match="equals">
+                        <option value="">Alle</option>
+                        <option value="1">Aanwezig</option>
+                        <option value="0">Niet aanwezig</option>
+                    </select>
+                </div>
+                @if ($activity->involvesMoney())
+                    <div class="filter-field">
+                        <label for="filter-payment">Betaling</label>
+                        <select id="filter-payment" data-filter="payment" data-match="equals">
+                            <option value="">Alle</option>
+                            @foreach ($activity->registrations->map->paymentLabel()->unique()->sort() as $label)
+                                <option value="{{ $label }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+                @if ($columns->isNotEmpty())
+                    @if ($columns->count() > 3)
+                        <button type="button" class="button button-ghost button-small" data-more-filters-toggle aria-expanded="false" aria-controls="more-filters">Meer filters</button>
+                    @endif
+                    <div class="filter-columns" id="more-filters" @if ($columns->count() > 3) data-more-filters hidden @endif>
+                        @foreach ($columns as $column)
+                            <div class="filter-field">
+                                <label for="filter-col-{{ $column['id'] }}">{{ $column['label'] }}</label>
+                                @if (($columnFilters[$column['id']]['options'] ?? null) !== null)
+                                    <select id="filter-col-{{ $column['id'] }}" data-filter="col-{{ $column['id'] }}" data-match="equals">
+                                        <option value="">Alle</option>
+                                        @foreach ($columnFilters[$column['id']]['options'] as $option)
+                                            <option value="{{ $option }}">{{ $option }}</option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <input id="filter-col-{{ $column['id'] }}" type="text" data-filter="col-{{ $column['id'] }}" data-match="contains" placeholder="bevat">
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+                <div class="filter-summary">
+                    <span data-filter-count></span>
+                    <button type="button" class="link-button" data-filter-reset>Filters wissen</button>
+                </div>
+            </div>
+
             <div class="table-scroll" tabindex="0" role="region" aria-label="Inschrijvingen">
-                <table class="data-table registrations-table">
+                <table class="data-table registrations-table" data-registrations>
                     <thead>
                         <tr>
-                            <th scope="col">Ingeschreven op</th>
-                            <th scope="col">Naam</th>
-                            <th scope="col">Aanwezig</th>
-                            <th scope="col">E-mailadres</th>
+                            <th scope="col" class="select-cell" data-select-cell hidden>
+                                <label class="checkbox"><input type="checkbox" data-select-all><span class="visually-hidden">Alles selecteren</span></label>
+                            </th>
+                            <th scope="col" data-sort="created" data-type="number">Ingeschreven op</th>
+                            <th scope="col" data-sort="name" data-type="text">Naam</th>
+                            <th scope="col" data-sort="present" data-type="number">Aanwezig</th>
+                            <th scope="col" data-sort="email" data-type="text">E-mailadres</th>
                             @if ($activity->involvesMoney())
-                                <th scope="col">Betaling</th>
+                                <th scope="col" data-sort="payment" data-type="text">Betaling</th>
                             @endif
                             @foreach ($columns as $column)
-                                <th scope="col">{{ $column['label'] }}</th>
+                                <th scope="col" data-sort="col-{{ $column['id'] }}" data-type="{{ $columnFilters[$column['id']]['sort'] ?? 'text' }}">{{ $column['label'] }}</th>
                             @endforeach
                             <th scope="col"><span class="visually-hidden">Acties</span></th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($activity->registrations as $registration)
-                            <tr id="inschrijving-{{ $registration->id }}" @class(['row-unconfirmed' => ! $registration->isConfirmed()])>
+                            <tr id="inschrijving-{{ $registration->id }}" @class(['row-unconfirmed' => ! $registration->isConfirmed()])
+                                data-row data-id="{{ $registration->id }}"
+                                data-search="{{ $registration->name }} {{ $registration->email }}"
+                                data-name="{{ $registration->name }}" data-email="{{ $registration->email }}"
+                                data-created="{{ $registration->created_at->getTimestamp() }}"
+                                data-present="{{ $registration->isPresent() ? 1 : 0 }}"
+                                data-payment="{{ $registration->paymentLabel() }}"
+                                @foreach ($columns as $column) data-col-{{ $column['id'] }}="{{ $registration->answerFor($column['id']) }}" @endforeach>
+                                <td class="select-cell" data-select-cell hidden>
+                                    <label class="checkbox"><input type="checkbox" value="{{ $registration->id }}" data-select-row><span class="visually-hidden">{{ $registration->name }} selecteren</span></label>
+                                </td>
                                 <td class="nowrap">{{ $registration->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="nowrap">{{ $registration->name }}</td>
                                 <td class="nowrap">
@@ -158,6 +224,34 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            <div class="selection-bar" data-selection-bar hidden role="region" aria-label="Selectie">
+                <strong data-selection-count></strong>
+                <form method="GET" action="{{ route('activiteiten.mail', $activity) }}" data-selection-form>
+                    <button type="submit" class="button button-ghost button-small">Mailen</button>
+                </form>
+                <form method="POST" action="{{ route('activiteiten.aanwezigheid.alle', $activity) }}" data-selection-form>
+                    @csrf
+                    <input type="hidden" name="present" value="1">
+                    <button type="submit" class="button button-ghost button-small">Aanwezig</button>
+                </form>
+                <form method="POST" action="{{ route('activiteiten.aanwezigheid.alle', $activity) }}" data-selection-form>
+                    @csrf
+                    <input type="hidden" name="present" value="0">
+                    <button type="submit" class="button button-ghost button-small">Niet aanwezig</button>
+                </form>
+                @if ($activity->hasCertificates() && ! $activity->starts_at->isFuture())
+                    <form method="POST" action="{{ route('activiteiten.attesten.versturen', $activity) }}" data-selection-form
+                          data-confirm="Attesten versturen aan de selectie?"
+                          data-confirm-text="Wie in de selectie aanwezig is en nog geen attest kreeg, krijgt het per e-mail."
+                          data-confirm-button="Versturen"
+                          data-confirm-tone="neutral">
+                        @csrf
+                        <button type="submit" class="button button-small">Attesten versturen</button>
+                    </form>
+                @endif
+                <button type="button" class="link-button" data-selection-clear>Selectie wissen</button>
             </div>
 
             @if ($activity->involvesMoney())
@@ -230,4 +324,6 @@
             });
         });
     </script>
+
+    <script src="{{ asset('js/registrations.js') }}?v={{ filemtime(public_path('js/registrations.js')) }}" defer></script>
 @endsection

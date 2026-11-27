@@ -113,16 +113,16 @@ class CertificateMailTest extends TestCase
     public function test_button_hidden_before_start_without_hours_or_without_attendees(): void
     {
         $this->activity->update(['starts_at' => now()->addDay(), 'ends_at' => now()->addDay()->addHours(8), 'registration_deadline' => now()]);
-        $this->overview()->assertDontSee('Attesten versturen');
+        $this->overview()->assertDontSee('Attesten versturen (');
         $this->send()->assertSessionHasErrors(['certificate' => 'Attesten kun je pas versturen vanaf de start van de activiteit.']);
 
         $this->activity->update(['starts_at' => now()->subDay(), 'training_hours' => null]);
-        $this->overview()->assertDontSee('Attesten versturen');
+        $this->overview()->assertDontSee('Attesten versturen (');
         $this->send()->assertSessionHasErrors(['certificate' => 'Deze activiteit heeft geen vormingsuren, dus geen attesten.']);
 
         $this->activity->update(['training_hours' => 3]);
         $this->activity->registrations()->update(['present_at' => null]);
-        $this->overview()->assertDontSee('Attesten versturen');
+        $this->overview()->assertDontSee('Attesten versturen (');
         $this->send()->assertSessionHasErrors(['certificate' => 'Er zijn geen nieuwe attesten om te versturen.']);
 
         Mail::assertNothingSent();
@@ -133,7 +133,7 @@ class CertificateMailTest extends TestCase
         $this->send();
         $this->activity->update(['training_hours' => null]);
 
-        $this->overview()->assertDontSee('Attesten versturen')->assertSee('attest verstuurd');
+        $this->overview()->assertDontSee('Attesten versturen (')->assertSee('attest verstuurd');
         $this->actingAs($this->activity->user)
             ->get("/activiteiten/{$this->activity->slug}/inschrijvingen/{$this->registrations['Jan']->id}/attest.pdf")
             ->assertNotFound();

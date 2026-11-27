@@ -10,6 +10,7 @@ use App\Payments\RegistrationCancellation;
 use App\Payments\RegistrationCheckout;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use OpenSpout\Common\Entity\Cell\DateTimeCell;
@@ -56,7 +57,8 @@ class RegistrationController extends Controller
 
         return view('activiteiten.inschrijvingen', [
             'activity' => $activity,
-            'columns' => $activity->answerColumns(),
+            'columns' => $columns = $activity->answerColumns(),
+            'columnFilters' => $this->columnFilters($activity, $columns),
             // How many certificates "Attesten versturen" would send; 0 hides the button.
             'certificateCount' => $activity->canSendCertificates() ? $activity->certificateRecipients()->count() : 0,
         ]);
@@ -165,5 +167,33 @@ class RegistrationController extends Controller
         }
 
         return back()->with('status', $status);
+    }
+
+    /**
+     * How each answer column is filtered and sorted on the overview (public/js/registrations.js):
+     * dropdowns and checkboxes match exactly from a list, everything else is "contains".
+     *
+     * @param  Collection<int, array{id: int, label: string}>  $columns
+     * @return array<int, array{options: list<string>|null, sort: string}>
+     */
+    private function columnFilters(Activity $activity, Collection $columns): array
+    {
+        $fields = $activity->fields->keyBy('id');
+
+        return $columns->mapWithKeys(function (array $column) use ($fields) {
+            $field = $fields->get($column['id']);
+
+            return [$column['id'] => [
+                'options' => match ($field?->type) {
+                    'select' => array_values($field->options ?? []),
+                    'checkbox' => ['Ja', 'Nee'],
+                    default => null,
+                },
+                'sort' => match ($field?->type) {
+                    'number' => 'number',
+                    default => 'text',
+                },
+            ]];
+        })->all();
     }
 }
