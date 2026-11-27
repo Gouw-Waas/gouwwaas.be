@@ -3,7 +3,8 @@
 
 Dag {{ $registration->name }},
 
-Je deelnameattest voor **{{ $activity->title }}** ({{ $activity->dateLabel() }}) zit in bijlage.
+{{-- An Extern attest activity isn't stored and has dates without times: show just the dates. --}}
+Je deelnameattest voor **{{ $activity->title }}** ({{ $activity->exists ? $activity->dateLabel() : app(\App\Certificates\CertificateRenderer::class)->dateText($activity) }}) zit in bijlage.
 Je kunt het gebruiken als bewijs van deelname, bijvoorbeeld bij je gemeente.
 
 Groeten,<br>

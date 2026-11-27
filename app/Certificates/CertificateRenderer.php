@@ -92,23 +92,24 @@ class CertificateRenderer
         return $registration;
     }
 
-    public function pdf(Registration $registration): string
+    public function pdf(Registration $registration, ?string $organiser = null): string
     {
         $dompdf = new Dompdf(new Options(['defaultFont' => 'DejaVu Sans', 'isRemoteEnabled' => false]));
         $dompdf->setPaper('A4', 'portrait');
-        $dompdf->loadHtml($this->html($registration));
+        $dompdf->loadHtml($this->html($registration, $organiser));
         $dompdf->render();
 
         return (string) $dompdf->output();
     }
 
-    public function html(Registration $registration): string
+    public function html(Registration $registration, ?string $organiser = null): string
     {
         $activity = $registration->activity;
 
         return view('attesten.attest', [
             'activity' => $activity,
             'registration' => $registration,
+            'organiser' => $organiser,
             'organisation' => Organisation::current(),
             'signers' => $this->signers(),
             'stamp' => Stamp::dataUri(),
@@ -126,7 +127,7 @@ class CertificateRenderer
     /**
      * "op 12 december 2026", or "van 12 december 2026 tot 13 december 2026".
      */
-    private function dateText(Activity $activity): string
+    public function dateText(Activity $activity): string
     {
         if (! $activity->ends_at || $activity->ends_at->isSameDay($activity->starts_at)) {
             return 'op '.$this->longDate($activity->starts_at);

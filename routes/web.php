@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Admin\CertificateSettingsController;
+use App\Http\Controllers\Admin\ExternalCertificateController;
 use App\Http\Controllers\Admin\OrganisationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AttendanceController;
@@ -121,6 +122,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/attest', [CertificateSettingsController::class, 'edit'])->name('attest.instellingen');
             Route::put('/attest', [CertificateSettingsController::class, 'update'])->name('attest.instellingen.update');
             Route::get('/attest/voorbeeld.pdf', [CertificateSettingsController::class, 'preview'])->name('attest.voorbeeld');
+
+            // Certificates for an activity a subgroup organised: sent from a list, nothing stored.
+            Route::get('/extern-attest', [ExternalCertificateController::class, 'edit'])->name('attest.extern');
+            Route::post('/extern-attest', [ExternalCertificateController::class, 'send'])->name('attest.extern.versturen');
         });
 
         // Past activities: delete permanently, without refunds or e-mails.
