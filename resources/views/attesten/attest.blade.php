@@ -50,6 +50,9 @@
             <strong>{{ $activity->title }}</strong>@if (filled($organiser ?? null)), georganiseerd door {{ $organiser }},@endif te {{ $activity->location }}, {{ $dateText }}.
         </p>
         <p>Deze activiteit is goed voor <strong>{{ $activity->trainingHoursLabel() }} vormingsuren</strong>.</p>
+        @if ($price !== null)
+            <p>{!! $price === 0 ? 'De deelname was <strong>gratis</strong>.' : 'Het deelnamegeld bedroeg <strong>'.e($registration->amountLabel()).'</strong>.' !!}</p>
+        @endif
     </div>
 
     <p class="issued">Opgemaakt te Sint-Niklaas op {{ $issuedOn }}.</p>

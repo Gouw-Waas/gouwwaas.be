@@ -37,10 +37,11 @@
                 'starts_on' => ['Startdatum', 'date', null, true, null],
                 'ends_on' => ['Einddatum (optioneel)', 'date', null, false, null],
                 'training_hours' => ['Vormingsuren', 'text', 4, true, 'bv. 7,5'],
+                'price' => ['Deelnameprijs in euro (optioneel, 0 voor gratis)', 'text', 7, false, 'bv. 25 of 12,50'],
             ] as $field => [$label, $type, $max, $required, $placeholder])
                 <div class="field">
                     <label for="{{ $field }}">{{ $label }}</label>
-                    <input id="{{ $field }}" type="{{ $type }}" name="{{ $field }}" value="{{ old($field) }}" @if ($required) required @endif @if ($max) maxlength="{{ $max }}" @endif @if ($field === 'training_hours') inputmode="decimal" @endif autocomplete="off" @if ($placeholder) placeholder="{{ $placeholder }}" @endif @error($field) aria-invalid="true" aria-describedby="{{ $field }}-error" @enderror>
+                    <input id="{{ $field }}" type="{{ $type }}" name="{{ $field }}" value="{{ old($field) }}" @if ($required) required @endif @if ($max) maxlength="{{ $max }}" @endif @if (in_array($field, ['training_hours', 'price'], true)) inputmode="decimal" @endif autocomplete="off" @if ($placeholder) placeholder="{{ $placeholder }}" @endif @error($field) aria-invalid="true" aria-describedby="{{ $field }}-error" @enderror>
                     @error($field)
                         <p class="error" id="{{ $field }}-error">{{ $message }}</p>
                     @enderror

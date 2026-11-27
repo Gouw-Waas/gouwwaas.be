@@ -93,6 +93,36 @@ class ExternalCertificateTest extends TestCase
         }
     }
 
+    public function test_price_is_optional_and_on_the_certificate_when_given(): void
+    {
+        $html = function (): string {
+            $registration = null;
+            Mail::assertSent(CertificateMail::class, function (CertificateMail $mail) use (&$registration) {
+                $registration = $mail->registration;
+
+                return true;
+            });
+
+            return preg_replace('/\s+/', ' ', strip_tags(app(CertificateRenderer::class)->html($registration)));
+        };
+
+        $this->send();
+        $this->assertStringNotContainsString('deelnamegeld', $html());
+        $this->assertStringNotContainsString('gratis', $html());
+
+        Mail::fake();
+        $this->send(['price' => '12,5']);
+        $this->assertStringContainsString('Het deelnamegeld bedroeg € 12,50.', $html());
+
+        Mail::fake();
+        $this->send(['price' => '0']);
+        $this->assertStringContainsString('De deelname was gratis.', $html());
+
+        Mail::fake();
+        $this->send(['price' => 'tien euro'])->assertSessionHasErrors('price');
+        Mail::assertNothingSent();
+    }
+
     public function test_mail_shows_dates_without_midnight_times(): void
     {
         $this->send(['ends_on' => '']);
