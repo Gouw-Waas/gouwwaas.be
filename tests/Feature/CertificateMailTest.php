@@ -182,6 +182,38 @@ class CertificateMailTest extends TestCase
         Mail::assertNotSent(CertificateMail::class, fn (CertificateMail $mail) => $mail->registration->name === 'Lien');
     }
 
+    public function test_certificates_for_a_selection_only(): void
+    {
+        $this->actingAs($this->activity->user)
+            ->post("/activiteiten/{$this->activity->slug}/attesten", ['ids' => [$this->registrations['Lien']->id]])
+            ->assertSessionHas('status', '1 attest verstuurd.');
+
+        Mail::assertSent(CertificateMail::class, 1);
+        $this->assertNull($this->registrations['Jan']->fresh()->certificate_sent_at);
+    }
+
+    public function test_selection_without_anyone_eligible(): void
+    {
+        $this->actingAs($this->activity->user)
+            ->post("/activiteiten/{$this->activity->slug}/attesten", ['ids' => [$this->registrations['Piet']->id, $this->registrations['Joris']->id]])
+            ->assertSessionHasErrors(['certificate' => 'Geen van de geselecteerde deelnemers kan nog een attest krijgen.']);
+
+        Mail::assertNothingSent();
+    }
+
+    public function test_certificate_selection_ignores_foreign_ids(): void
+    {
+        $other = Activity::factory()->create(['user_id' => $this->activity->user_id, 'training_hours' => 2]);
+        $stranger = $other->registrations()->create(['name' => 'Vreemde', 'email' => 'v@example.com', 'answers' => []]);
+        $stranger->forceFill(['present_at' => now()])->save();
+
+        $this->actingAs($this->activity->user)
+            ->post("/activiteiten/{$this->activity->slug}/attesten", ['ids' => [$stranger->id, $this->registrations['Jan']->id]]);
+
+        Mail::assertSent(CertificateMail::class, 1);
+        Mail::assertSent(CertificateMail::class, fn (CertificateMail $mail) => $mail->registration->is($this->registrations['Jan']));
+    }
+
     public function test_mail_content(): void
     {
         $jan = $this->registrations['Jan'];

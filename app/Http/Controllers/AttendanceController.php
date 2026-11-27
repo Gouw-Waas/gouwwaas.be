@@ -33,15 +33,30 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Everyone confirmed is present; unconfirmed registrations (payment not finished) are only
-     * ticked by hand.
+     * Without a selection: everyone confirmed is present (unconfirmed registrations are only
+     * ticked by hand). With a selection (ids[] from the overview): exactly those, present or
+     * not, confirmed or not, since the organiser chose them.
      */
-    public function markAll(Activity $activity): RedirectResponse
+    public function markAll(Request $request, Activity $activity): RedirectResponse
     {
         Gate::authorize('viewRegistrations', $activity);
 
-        $count = $activity->registrations()->confirmed()->whereNull('present_at')->update(['present_at' => now()]);
+        $validated = $request->validate([
+            'present' => ['nullable', 'boolean'],
+            'ids' => ['nullable', 'array', 'max:1000'],
+            'ids.*' => ['integer'],
+        ]);
+        $present = $request->boolean('present', true);
 
-        return back()->with('status', "{$count} ".($count === 1 ? 'deelnemer' : 'deelnemers').' aangeduid als aanwezig.');
+        if (isset($validated['ids'])) {
+            $query = $activity->registrations()->whereKey($validated['ids']);
+            $count = $present
+                ? $query->whereNull('present_at')->update(['present_at' => now()])
+                : $query->whereNotNull('present_at')->update(['present_at' => null]);
+        } else {
+            $count = $activity->registrations()->confirmed()->whereNull('present_at')->update(['present_at' => now()]);
+        }
+
+        return back()->with('status', "{$count} ".($count === 1 ? 'deelnemer' : 'deelnemers').' aangeduid als '.($present ? 'aanwezig.' : 'niet aanwezig.'));
     }
 }

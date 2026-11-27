@@ -8,6 +8,7 @@ use App\Mail\CertificateMail;
 use App\Models\Activity;
 use App\Models\Registration;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
@@ -41,9 +42,12 @@ class CertificateController extends Controller
      * E-mail every present, confirmed registrant who hasn't had their certificate yet: one mail
      * per registration (siblings sharing an address each get their own).
      */
-    public function send(Activity $activity, CertificateRenderer $renderer): RedirectResponse
+    public function send(Request $request, Activity $activity, CertificateRenderer $renderer): RedirectResponse
     {
         Gate::authorize('viewRegistrations', $activity);
+
+        // Optional selection from the overview: only these (if they qualify).
+        $ids = $request->validate(['ids' => ['nullable', 'array', 'max:1000'], 'ids.*' => ['integer']])['ids'] ?? null;
 
         try {
             $renderer->ensureAvailable($activity);
@@ -55,10 +59,12 @@ class CertificateController extends Controller
             return back()->withErrors(['certificate' => 'Attesten kun je pas versturen vanaf de start van de activiteit.']);
         }
 
-        $recipients = $activity->certificateRecipients();
+        $recipients = $activity->certificateRecipients($ids);
 
         if ($recipients->isEmpty()) {
-            return back()->withErrors(['certificate' => 'Er zijn geen nieuwe attesten om te versturen.']);
+            return back()->withErrors(['certificate' => $ids === null
+                ? 'Er zijn geen nieuwe attesten om te versturen.'
+                : 'Geen van de geselecteerde deelnemers kan nog een attest krijgen.']);
         }
 
         // Sent straight away (no queue worker in production): give large groups the time they need.

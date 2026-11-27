@@ -128,6 +128,43 @@ class AttendanceTest extends TestCase
             ->assertDontSee('Iedereen aanwezig');
     }
 
+    public function test_selection_marks_exactly_those_including_unconfirmed(): void
+    {
+        $this->actingAs($this->activity->user)
+            ->post("/activiteiten/{$this->activity->slug}/aanwezig", ['present' => '1', 'ids' => [$this->registrations['Piet']->id, $this->registrations['Joris']->id]])
+            ->assertSessionHas('status', '2 deelnemers aangeduid als aanwezig.');
+
+        $this->assertTrue($this->registrations['Piet']->fresh()->isPresent());
+        $this->assertTrue($this->registrations['Joris']->fresh()->isPresent());
+        $this->assertFalse($this->registrations['Jan']->fresh()->isPresent());
+    }
+
+    public function test_selection_can_mark_absent(): void
+    {
+        foreach (['Jan', 'Piet'] as $name) {
+            $this->registrations[$name]->forceFill(['present_at' => now()])->save();
+        }
+
+        $this->actingAs($this->activity->user)
+            ->post("/activiteiten/{$this->activity->slug}/aanwezig", ['present' => '0', 'ids' => [$this->registrations['Jan']->id]])
+            ->assertSessionHas('status', '1 deelnemer aangeduid als niet aanwezig.');
+
+        $this->assertFalse($this->registrations['Jan']->fresh()->isPresent());
+        $this->assertTrue($this->registrations['Piet']->fresh()->isPresent());
+    }
+
+    public function test_selection_ignores_foreign_ids(): void
+    {
+        $other = Activity::factory()->create(['user_id' => $this->activity->user_id]);
+        $stranger = $other->registrations()->create(['name' => 'Vreemde', 'email' => 'v@example.com', 'answers' => []]);
+
+        $this->actingAs($this->activity->user)
+            ->post("/activiteiten/{$this->activity->slug}/aanwezig", ['present' => '1', 'ids' => [$stranger->id]])
+            ->assertSessionHas('status', '0 deelnemers aangeduid als aanwezig.');
+
+        $this->assertNull($stranger->fresh()->present_at);
+    }
+
     public function test_overview_shows_attendance_and_export_has_column(): void
     {
         $this->registrations['Jan']->forceFill(['present_at' => now()])->save();

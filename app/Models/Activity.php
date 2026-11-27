@@ -296,12 +296,14 @@ class Activity extends Model
      * confirmed, and not sent yet. No deduplication by e-mail address: every registration
      * is its own participant.
      *
+     * @param  list<int>|null  $ids  only these registrations (a selection on the overview)
      * @return Collection<int, Registration>
      */
-    public function certificateRecipients(): Collection
+    public function certificateRecipients(?array $ids = null): Collection
     {
         return $this->registrations
-            ->filter(fn (Registration $registration) => $registration->isPresent()
+            ->filter(fn (Registration $registration) => ($ids === null || in_array($registration->id, $ids))
+                && $registration->isPresent()
                 && $registration->isConfirmed()
                 && $registration->certificate_sent_at === null)
             ->values();
