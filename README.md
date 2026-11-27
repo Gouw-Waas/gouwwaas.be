@@ -167,6 +167,31 @@ shown when there are manual payments), the total, and what manually added partic
 still have to pay. It counts the price each registration paid; cancelled registrations
 are removed, so refunds (and administrative costs kept back) are not in it.
 
+**Attendance.** The registrations overview has an "Aanwezig" checkbox per registrant
+(saved straight away) and an "Iedereen aanwezig" button that ticks every confirmed
+registration; unconfirmed ones (payment not finished) can only be ticked by hand. The
+Excel export has an "Aanwezig" column. Stored as `registrations.present_at`.
+
+**Participation certificates (attesten).** An activity with *vormingsuren* (optional
+field on the activity form, whole or half hours) gives attendees a one-page PDF
+certificate: organisation, activity, dates, hours, the participant's name, the
+Gouwcommissaris(sen) and the stamp. "Attesten versturen (n)" on the overview e-mails
+every registrant who is present and confirmed and hasn't had one yet, one mail per
+registration (siblings on one address each get their own); it shows once the activity
+has started. `registrations.certificate_sent_at` makes sure nobody gets it twice, so the
+button can be used again for latecomers. Each row also has an "Attest" download. The PDF
+is made with dompdf (needs PHP's GD extension); the code is in `app/Certificates/`, the
+layout in `resources/views/attesten/attest.blade.php`.
+
+**Certificate stamp and signers.** Admins upload the stamp (PNG) on `/beheer/attest`
+("Attest" in the header); it is stored on the private disk at
+`storage/app/private/attesten/stempel.png`. The page also has a preview. Certificates are
+signed by everyone with the Gouwcommissaris function on Wie is wie. The organisation's
+name, address and logo come from `organisation` in `config/gouw.php` (also used on the
+privacy page and as the location placeholder); the Karree page should use it too once
+both branches are on `main`. Without a stamp or a Gouwcommissaris, no certificates can
+be made and the overview says why.
+
 **Mailing participants.** "Deelnemers mailen" in the overview sends a message to every
 participant (optionally also to those who never finished paying), one e-mail per
 address so nobody sees the others' addresses. The activity's date, place and link are
