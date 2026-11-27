@@ -42,6 +42,7 @@
                         </a>
                         @can('admin')
                             <a href="{{ route('gebruikers.index') }}" @class(['button', 'button-ghost', 'button-small', 'is-active' => request()->routeIs('gebruikers.*')])>Gebruikers</a>
+                            <a href="{{ route('attest.instellingen') }}" @class(['button', 'button-ghost', 'button-small', 'is-active' => request()->routeIs('attest.*')])>Attest</a>
                         @endcan
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

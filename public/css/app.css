@@ -1384,6 +1384,33 @@ a.group-row:hover .group-name { color: var(--olive); }
 .revenue-total dt, .revenue-total dd { font-weight: 800; font-size: 1.125rem; }
 .revenue .hint { margin-top: 12px; }
 .header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.header-actions form { margin: 0; }
+
+/* Registrations overview: attendance and certificates above the table, actions per row */
+.registrations-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+.toolbar-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.toolbar-group form { margin: 0; }
+.toolbar-label { color: var(--muted); }
+.toolbar-label strong { color: var(--ink); }
+.data-table .button-small { min-height: 30px; padding: 2px 12px; font-size: .8125rem; }
+/* Centred on the first line of text in the row, so buttons don't make rows uneven. */
+.row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin: -4px 0; }
+.attendance { display: flex; align-items: center; gap: 8px; min-height: 22px; }
+.attendance-form { display: inline-flex; }
+.data-table.registrations-table th,
+.data-table.registrations-table td { padding-left: 12px; padding-right: 12px; }
+.badge-small { padding: 1px 8px; font-size: .75rem; font-weight: 700; }
 .places { margin: 8px 0 0; }
 .places-full strong { color: var(--red); }
 .data-table td .mark-paid { margin-top: 6px; }
@@ -2023,3 +2050,58 @@ select:focus {
     .toast { animation-name: none, toast-fade; }
     *, *::before, *::after { transition: none !important; }
 }
+
+/* Beheer → Attest */
+.stamp-preview { max-width: 180px; height: auto; }
+
+/* Registrations overview: filters, sorting, selection (public/js/registrations.js) */
+.registrations-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 16px;
+    margin: 0 0 16px;
+}
+.registrations-filters[hidden], .filter-columns[hidden] { display: none; }
+.filter-field { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.filter-field label { font-size: .8125rem; font-weight: 700; color: var(--muted); }
+.filter-field input,
+.filter-field select { min-height: 38px; padding: 6px 10px; font-size: .9375rem; }
+.filter-search { flex: 1 1 240px; }
+/* The question filters flow in the same wrapping row as the others. */
+.filter-columns { display: contents; }
+.filter-summary { display: flex; align-items: center; gap: 12px; margin-left: auto; color: var(--muted); font-size: .9375rem; }
+.sort-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.sort-button::after { content: ' ↕'; color: var(--muted); font-weight: 400; }
+th[aria-sort="ascending"] .sort-button::after { content: ' ↑'; color: var(--ink); }
+th[aria-sort="descending"] .sort-button::after { content: ' ↓'; color: var(--ink); }
+.data-table.registrations-table .select-cell { width: 1%; min-width: 0; padding-right: 0; }
+/* .checkbox has a bottom margin for forms; not in table cells. */
+.registrations-table .checkbox { margin: 0; }
+.selection-bar {
+    position: sticky;
+    bottom: 16px;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 12px 0 0;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .12);
+}
+.selection-bar[hidden] { display: none; }
+.selection-bar form { margin: 0; }
+.selection-bar .button-small { min-height: 34px; padding: 4px 14px; font-size: .875rem; }
+.selection-bar .link-button { margin-left: auto; }

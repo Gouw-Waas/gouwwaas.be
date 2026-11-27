@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activity;
+use App\Models\ActivityField;
 use App\Models\Registration;
 use App\Payments\CancellationException;
 use App\Payments\PaymentException;
@@ -10,6 +11,7 @@ use App\Payments\RegistrationCancellation;
 use App\Payments\RegistrationCheckout;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use OpenSpout\Common\Entity\Cell\DateTimeCell;
@@ -56,7 +58,10 @@ class RegistrationController extends Controller
 
         return view('activiteiten.inschrijvingen', [
             'activity' => $activity,
-            'columns' => $activity->answerColumns(),
+            'columns' => $columns = $activity->answerColumns(),
+            'columnFilters' => $this->columnFilters($activity, $columns),
+            // How many certificates "Attesten versturen" would send; 0 hides the button.
+            'certificateCount' => $activity->canSendCertificates() ? $activity->certificateRecipients()->count() : 0,
         ]);
     }
 
@@ -73,15 +78,16 @@ class RegistrationController extends Controller
         $filename = "inschrijvingen-{$activity->slug}.xlsx";
 
         return response()->streamDownload(function () use ($activity, $columns) {
-            $headers = ['Ingeschreven op', 'Naam', 'E-mailadres', 'Betaling', 'Bedrag', ...$columns->pluck('label')];
+            $headers = ['Ingeschreven op', 'Naam', 'E-mailadres', 'Betaling', 'Bedrag', 'Aanwezig', ...$columns->pluck('label')];
 
             $options = new Options;
             $options->setColumnWidth(18, 1);
             $options->setColumnWidth(24, 2);
             $options->setColumnWidth(30, 3);
             $options->setColumnWidth(14, 4, 5);
+            $options->setColumnWidth(10, 6);
             if ($columns->isNotEmpty()) {
-                $options->setColumnWidthForRange(22, 6, count($headers));
+                $options->setColumnWidthForRange(22, 7, count($headers));
             }
 
             $writer = new Writer($options);
@@ -107,6 +113,7 @@ class RegistrationController extends Controller
                     $text($registration->email),
                     $text($registration->paymentLabel()),
                     $registration->isFree() ? $text('') : new NumericCell($registration->amount_cents / 100, $euro),
+                    $text($registration->isPresent() ? 'Ja' : ''),
                     ...$columns->map(fn (array $column) => $text($registration->answerFor($column['id'])))->all(),
                 ]));
             }
@@ -161,5 +168,35 @@ class RegistrationController extends Controller
         }
 
         return back()->with('status', $status);
+    }
+
+    /**
+     * How each answer column is filtered and sorted on the overview (public/js/registrations.js):
+     * dropdowns and checkboxes match exactly from a list, everything else is "contains".
+     *
+     * @param  Collection<int, array{id: int, label: string}>  $columns
+     * @return array<int, array{options: list<string>|null, sort: string}>
+     */
+    private function columnFilters(Activity $activity, Collection $columns): array
+    {
+        $fields = $activity->fields->keyBy('id');
+        $filters = [];
+
+        foreach ($columns as $column) {
+            // Removed fields have no field anymore: filtered as text.
+            $field = $fields->get($column['id']);
+            $type = $field instanceof ActivityField ? $field->type : null;
+
+            $filters[$column['id']] = [
+                'options' => match ($type) {
+                    'select' => array_map('strval', (array) $field->options),
+                    'checkbox' => ['Ja', 'Nee'],
+                    default => null,
+                },
+                'sort' => $type === 'number' ? 'number' : 'text',
+            ];
+        }
+
+        return $filters;
     }
 }

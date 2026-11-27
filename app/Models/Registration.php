@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
  * @property array<int, array{field_id: int, label: string, value: string|null}> $answers
  * @property Carbon|null $paid_at
  * @property Carbon|null $confirmation_sent_at
+ * @property Carbon|null $present_at
+ * @property Carbon|null $certificate_sent_at
  */
 #[Fillable(['name', 'email', 'answers', 'amount_cents'])]
 class Registration extends Model
@@ -33,6 +35,8 @@ class Registration extends Model
             'paid_at' => 'datetime',
             'paid_manually' => 'boolean',
             'confirmation_sent_at' => 'datetime',
+            'present_at' => 'datetime',
+            'certificate_sent_at' => 'datetime',
         ];
     }
 
@@ -113,6 +117,14 @@ class Registration extends Model
     public function isConfirmed(): bool
     {
         return $this->isFree() || $this->payment_status === 'paid' || $this->isManual();
+    }
+
+    /**
+     * Marked present by an organiser.
+     */
+    public function isPresent(): bool
+    {
+        return $this->present_at !== null;
     }
 
     public function isPaid(): bool

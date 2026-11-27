@@ -47,10 +47,11 @@
                     Deze website is van <strong>Gouw Waas</strong>, een gouw van Scouts en Gidsen Vlaanderen vzw. Gouw Waas is
                     verantwoordelijk voor de gegevens die via deze website verwerkt worden.
                 </p>
+                @php($organisation = config('gouw.organisation'))
                 <address class="privacy-address">
-                    Gouw Waas · Gouwhuis Karree<br>
-                    Apostelstraat 5, 9100 Sint-Niklaas<br>
-                    <a href="mailto:gouwbureau@gouwwaas.be">gouwbureau@gouwwaas.be</a>
+                    {{ $organisation['name'] }} · {{ $organisation['building'] }}<br>
+                    {{ $organisation['street'] }}, {{ $organisation['city'] }}<br>
+                    <a href="mailto:{{ $organisation['email'] }}">{{ $organisation['email'] }}</a>
                 </address>
                 <p>
                     Je ledenadministratie (als lid of leiding van een scoutsgroep) loopt <strong>niet</strong> via deze website,
@@ -68,6 +69,7 @@
                     <li>Je <strong>naam</strong> en <strong>e-mailadres</strong>.</li>
                     <li>Je <strong>antwoorden</strong> op de vragen die de organisator bij die activiteit stelt, bijvoorbeeld je groep, tak of dieetwensen.</li>
                     <li>Voor betalende activiteiten: het <strong>bedrag</strong> en de <strong>status van je betaling</strong> (betaald, mislukt, terugbetaald).</li>
+                    <li>Of je <strong>aanwezig</strong> was: organisatoren kunnen aanduiden wie aanwezig was. Dat gebruiken we om deelnameattesten te maken.</li>
                 </ul>
                 <p>
                     Je bankrekening- of kaartgegevens geef je rechtstreeks aan onze betaalpartner Mollie. Die gegevens komen

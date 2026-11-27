@@ -100,6 +100,28 @@ class RegistrationTest extends TestCase
             ->assertSee('Sint-Jozef');
     }
 
+    public function test_overview_has_filter_and_selection_markup(): void
+    {
+        $activity = $this->activityWithFields();
+        $this->post("/activiteiten/{$activity->slug}/inschrijven", [
+            'name' => 'Zoë', 'email' => 'zoe@example.com',
+            'answers' => $this->answers($activity, ['Sint-Jozef', 'Welpen', '1']),
+        ]);
+        $tak = $activity->fields->firstWhere('label', 'Tak');
+        $groep = $activity->fields->firstWhere('label', 'Groep');
+
+        $html = $this->actingAs($activity->user)->get("/activiteiten/{$activity->slug}/inschrijvingen")->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-registrations', $html);
+        $this->assertStringContainsString('data-filter="search"', $html);
+        $this->assertMatchesRegularExpression('/data-filter="col-'.$tak->id.'"[^>]*>.*?<option value="Welpen">/s', $html);
+        $this->assertMatchesRegularExpression('/data-filter="col-'.$groep->id.'"[^>]*data-match="contains"/', $html);
+        $this->assertStringContainsString('data-col-'.$tak->id.'="Welpen"', $html);
+        $this->assertStringContainsString('data-select-row', $html);
+        $this->assertStringContainsString('data-selection-bar', $html);
+        $this->assertStringContainsString('js/registrations.js', $html);
+    }
+
     public function test_export_is_an_excel_file_with_answers_as_plain_text(): void
     {
         $activity = $this->activityWithFields();
@@ -116,9 +138,9 @@ class RegistrationTest extends TestCase
         $content = $response->streamedContent();
         $rows = $this->readXlsx($content);
 
-        $this->assertSame(['Ingeschreven op', 'Naam', 'E-mailadres', 'Betaling', 'Bedrag', 'Groep', 'Tak', 'Akkoord met de afspraken', 'Aantal personen'], $rows[0]);
+        $this->assertSame(['Ingeschreven op', 'Naam', 'E-mailadres', 'Betaling', 'Bedrag', 'Aanwezig', 'Groep', 'Tak', 'Akkoord met de afspraken', 'Aantal personen'], $rows[0]);
         $this->assertInstanceOf(\DateTimeInterface::class, $rows[1][0]); // a real date cell, sortable in Excel
-        $this->assertSame(['=HYPERLINK("http://evil")', 'jan@example.com', 'Gratis', '', 'Sint-Jozef', 'Welpen', 'Ja'], array_slice($rows[1], 1, 7));
+        $this->assertSame(['=HYPERLINK("http://evil")', 'jan@example.com', 'Gratis', '', '', 'Sint-Jozef', 'Welpen', 'Ja'], array_slice($rows[1], 1, 8));
 
         // Stored as text, never as a formula.
         $this->assertStringNotContainsString('<f>', $this->sheetXml($content));

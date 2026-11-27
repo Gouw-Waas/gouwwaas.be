@@ -167,6 +167,8 @@ class ActivityController extends Controller
             'registration_deadline' => ['required', 'date', 'before_or_equal:starts_at'],
             'price' => ['nullable', 'regex:/^\d{1,5}([.,]\d{1,2})?$/'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            // Whole or half hours, more than 0.
+            'training_hours' => ['nullable', 'regex:/^\d{1,2}([.,][05])?$/', 'not_regex:/^0+([.,]0)?$/'],
             // Usually made smaller in the browser before uploading (see the form).
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'remove_image' => ['nullable', 'boolean'],
@@ -180,6 +182,8 @@ class ActivityController extends Controller
             'ends_at.after_or_equal' => 'Het einde moet na het begin liggen.',
             'registration_deadline.before_or_equal' => 'De inschrijvingsdeadline moet voor het begin van de activiteit liggen.',
             'price.regex' => 'Vul een bedrag in, bv. 12 of 12,50.',
+            'training_hours.regex' => 'Vul een aantal uren in, bv. 3 of 7,5.',
+            'training_hours.not_regex' => 'Vul een aantal uren in, bv. 3 of 7,5.',
             'image.image' => 'Kies een afbeelding (jpg, png of webp).',
             'image.mimes' => 'Kies een afbeelding (jpg, png of webp).',
             'image.max' => 'De afbeelding mag maximaal 5 MB groot zijn.',
@@ -193,6 +197,7 @@ class ActivityController extends Controller
             'registration_deadline' => 'inschrijvingsdeadline',
             'price' => 'prijs',
             'capacity' => 'maximum aantal deelnemers',
+            'training_hours' => 'vormingsuren',
             'image' => 'achtergrondafbeelding',
         ]);
 
@@ -214,6 +219,7 @@ class ActivityController extends Controller
             'registration_deadline' => $validated['registration_deadline'],
             'price_cents' => (int) round(((float) str_replace(',', '.', $validated['price'] ?? '0')) * 100),
             'capacity' => filled($validated['capacity'] ?? null) ? (int) $validated['capacity'] : null,
+            'training_hours' => filled($validated['training_hours'] ?? null) ? (float) str_replace(',', '.', $validated['training_hours']) : null,
         ];
 
         return [$attributes, $validated['fields'] ?? []];

@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\Admin\CertificateSettingsController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\ManualRegistrationController;
@@ -53,6 +56,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/activiteiten/{activity}/inschrijvingen/{registration:id}/betaald', [ManualRegistrationController::class, 'markPaid'])
         ->scopeBindings()
         ->name('activiteiten.inschrijvingen.paid');
+    // Attendance (who was there), on the registrations overview.
+    Route::post('/activiteiten/{activity}/inschrijvingen/{registration:id}/aanwezig', [AttendanceController::class, 'update'])
+        ->scopeBindings()
+        ->name('activiteiten.aanwezigheid');
+    Route::post('/activiteiten/{activity}/aanwezig', [AttendanceController::class, 'markAll'])->name('activiteiten.aanwezigheid.alle');
+    // Participation certificates (activities with vormingsuren).
+    Route::get('/activiteiten/{activity}/inschrijvingen/{registration:id}/attest.pdf', [CertificateController::class, 'download'])
+        ->scopeBindings()
+        ->name('activiteiten.attest');
+    Route::post('/activiteiten/{activity}/attesten', [CertificateController::class, 'send'])->name('activiteiten.attesten.versturen');
     Route::delete('/activiteiten/{activity}/inschrijvingen/{registration:id}', [RegistrationController::class, 'destroy'])
         ->scopeBindings()
         ->name('activiteiten.inschrijvingen.destroy');
@@ -116,6 +129,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/blokken/{block}/bewerken', [PageBlockController::class, 'edit'])->name('blokken.edit');
         Route::put('/blokken/{block}', [PageBlockController::class, 'update'])->name('blokken.update');
         Route::delete('/blokken/{block}', [PageBlockController::class, 'destroy'])->name('blokken.destroy');
+
+        // Participation certificates: stamp, signers and a preview.
+        Route::get('/beheer/attest', [CertificateSettingsController::class, 'edit'])->name('attest.instellingen');
+        Route::put('/beheer/attest', [CertificateSettingsController::class, 'update'])->name('attest.instellingen.update');
+        Route::get('/beheer/attest/voorbeeld.pdf', [CertificateSettingsController::class, 'preview'])->name('attest.voorbeeld');
 
         // Wie is wie: only adjuncten can be added or removed (checked in the controller).
         Route::get('/wie-is-wie/adjuncten/nieuw', [RoleController::class, 'create'])->name('wie-is-wie.create');

@@ -23,7 +23,7 @@ use Illuminate\Support\Str;
  * @property Carbon $registration_deadline
  * @property string|null $image_path
  */
-#[Fillable(['title', 'description', 'location', 'starts_at', 'ends_at', 'registration_deadline', 'price_cents', 'capacity'])]
+#[Fillable(['title', 'description', 'location', 'starts_at', 'ends_at', 'registration_deadline', 'price_cents', 'capacity', 'training_hours'])]
 class Activity extends Model
 {
     /** @use HasFactory<ActivityFactory> */
@@ -36,6 +36,7 @@ class Activity extends Model
             'ends_at' => 'datetime',
             'registration_deadline' => 'datetime',
             'price_cents' => 'integer',
+            'training_hours' => 'decimal:1',
         ];
     }
 
@@ -257,6 +258,63 @@ class Activity extends Model
     public static function euro(int $cents): string
     {
         return '€ '.number_format($cents / 100, 2, ',', '.');
+    }
+
+    /**
+     * Activities with vormingsuren give attendees a participation certificate.
+     */
+    public function hasCertificates(): bool
+    {
+        return $this->training_hours !== null;
+    }
+
+    /**
+     * "7,5" or "8"; null without vormingsuren.
+     */
+    public function trainingHoursLabel(): ?string
+    {
+        if ($this->training_hours === null) {
+            return null;
+        }
+
+        $hours = (float) $this->training_hours;
+
+        return fmod($hours, 1.0) === 0.0 ? (string) (int) $hours : number_format($hours, 1, ',', '');
+    }
+
+    /**
+     * Who gets a certificate when the organiser clicks "Attesten versturen": present,
+     * confirmed, and not sent yet. No deduplication by e-mail address: every registration
+     * is its own participant.
+     *
+     * @param  list<int>|null  $ids  only these registrations (a selection on the overview)
+     * @return Collection<int, Registration>
+     */
+    public function certificateRecipients(?array $ids = null): Collection
+    {
+        return $this->registrations
+            ->filter(fn (Registration $registration) => ($ids === null || in_array($registration->id, $ids))
+                && $registration->isPresent()
+                && $registration->isConfirmed()
+                && $registration->certificate_sent_at === null)
+            ->values();
+    }
+
+    /**
+     * The "Attesten versturen" button: vormingsuren, started, and someone to send to.
+     */
+    public function canSendCertificates(): bool
+    {
+        return $this->hasCertificates() && ! $this->starts_at->isFuture() && $this->certificateRecipients()->isNotEmpty();
+    }
+
+    /**
+     * Whether any registration costs money (not the current price: someone may have
+     * registered while the activity was still free). Shows the payment column and summary.
+     */
+    public function involvesMoney(): bool
+    {
+        return $this->registrations->contains(fn (Registration $registration) => ! $registration->isFree());
     }
 
     public function isRegistrationOpen(): bool
