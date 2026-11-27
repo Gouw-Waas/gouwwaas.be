@@ -1877,3 +1877,6 @@ select:focus {
     .toast { animation-name: none, toast-fade; }
     *, *::before, *::after { transition: none !important; }
 }
+
+/* Beheer → Attest */
+.stamp-preview { max-width: 180px; height: auto; }

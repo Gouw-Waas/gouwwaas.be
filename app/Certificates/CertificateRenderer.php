@@ -39,13 +39,54 @@ class CertificateRenderer
             throw new CertificateUnavailable('Deze activiteit heeft geen vormingsuren, dus geen attesten.');
         }
 
+        if ($problem = $this->problems()[0] ?? null) {
+            throw new CertificateUnavailable($problem);
+        }
+    }
+
+    /**
+     * What's missing before any certificate can be made (stamp, signer), for every activity.
+     *
+     * @return list<string>
+     */
+    public function problems(): array
+    {
+        $problems = [];
+
         if (! Stamp::exists()) {
-            throw new CertificateUnavailable('Er is nog geen stempel opgeladen. Een beheerder kan dat doen via Beheer → Attest.');
+            $problems[] = 'Er is nog geen stempel opgeladen. Een beheerder kan dat doen via Beheer → Attest.';
         }
 
         if ($this->signers()->isEmpty()) {
-            throw new CertificateUnavailable('Er staat nog geen gouwcommissaris op Wie is wie.');
+            $problems[] = 'Er staat nog geen gouwcommissaris op Wie is wie.';
         }
+
+        return $problems;
+    }
+
+    /**
+     * A certificate with sample data, for the admin page (nothing is saved).
+     */
+    public function samplePdf(): string
+    {
+        return $this->pdf($this->sampleRegistration());
+    }
+
+    public function sampleRegistration(): Registration
+    {
+        $activity = new Activity([
+            'title' => 'Voorbeeldactiviteit',
+            'location' => config('gouw.organisation.building'),
+            'starts_at' => now()->startOfDay()->setTime(9, 0),
+            'ends_at' => now()->startOfDay()->setTime(17, 0),
+            'training_hours' => 3,
+        ]);
+        $activity->slug = 'voorbeeld';
+
+        $registration = new Registration(['name' => 'Voornaam Achternaam']);
+        $registration->setRelation('activity', $activity);
+
+        return $registration;
     }
 
     public function pdf(Registration $registration): string
