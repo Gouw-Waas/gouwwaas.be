@@ -54,17 +54,35 @@
                 <div class="card">
                     <h2>Aan wie?</h2>
 
-                    <p>
-                        Naar <strong>{{ $confirmedCount }} {{ $confirmedCount === 1 ? 'deelnemer' : 'deelnemers' }}</strong>,
-                        elk een eigen e-mail: deelnemers zien elkaars adres niet.
-                    </p>
+                    @if ($selection !== null)
+                        <p>
+                            Naar <strong>{{ $selection->count() }} geselecteerde {{ $selection->count() === 1 ? 'deelnemer' : 'deelnemers' }}</strong>,
+                            elk een eigen e-mail: deelnemers zien elkaars adres niet.
+                        </p>
+                        <details class="mail-selection">
+                            <summary>Wie?</summary>
+                            <ul>
+                                @foreach ($selection as $registration)
+                                    <li>{{ $registration->name }} <span class="muted">({{ $registration->email }})</span></li>
+                                @endforeach
+                            </ul>
+                        </details>
+                        @foreach ($selection as $registration)
+                            <input type="hidden" name="ids[]" value="{{ $registration->id }}">
+                        @endforeach
+                    @else
+                        <p>
+                            Naar <strong>{{ $confirmedCount }} {{ $confirmedCount === 1 ? 'deelnemer' : 'deelnemers' }}</strong>,
+                            elk een eigen e-mail: deelnemers zien elkaars adres niet.
+                        </p>
 
-                    @if ($allCount > $confirmedCount)
-                        @php($unconfirmed = $allCount - $confirmedCount)
-                        <label class="checkbox">
-                            <input type="checkbox" name="include_unconfirmed" value="1" @checked(old('include_unconfirmed')) data-mail-unconfirmed>
-                            <span>Ook naar wie de online betaling niet afrondde ({{ $unconfirmed }})</span>
-                        </label>
+                        @if ($allCount > $confirmedCount)
+                            @php($unconfirmed = $allCount - $confirmedCount)
+                            <label class="checkbox">
+                                <input type="checkbox" name="include_unconfirmed" value="1" @checked(old('include_unconfirmed')) data-mail-unconfirmed>
+                                <span>Ook naar wie de online betaling niet afrondde ({{ $unconfirmed }})</span>
+                            </label>
+                        @endif
                     @endif
 
                     <label class="checkbox">
@@ -82,7 +100,7 @@
 
             <template id="mail-deelnemers-details">
                 <p>
-                    Het bericht gaat naar <strong data-mail-count>{{ $confirmedCount }}</strong> e-mailadressen.
+                    Het bericht gaat naar <strong data-mail-count>{{ $selection !== null ? $selection->count() : $confirmedCount }}</strong> e-mailadressen.
                     Eenmaal verstuurd, kan je het niet meer terughalen.
                 </p>
             </template>
@@ -96,7 +114,7 @@
 
                     dialog.addEventListener('confirm:open', () => {
                         const count = dialog.querySelector('[data-mail-count]');
-                        if (count) count.textContent = toggle && toggle.checked ? @json($allCount) : @json($confirmedCount);
+                        if (count && toggle) count.textContent = toggle.checked ? @json($allCount) : @json($confirmedCount);
                     });
                 });
             </script>

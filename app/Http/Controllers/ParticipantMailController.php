@@ -20,14 +20,18 @@ use Throwable;
  */
 class ParticipantMailController extends Controller
 {
-    public function create(Activity $activity): View
+    public function create(Request $request, Activity $activity): View
     {
         Gate::authorize('viewRegistrations', $activity);
+
+        $ids = $this->selectedIds($request);
 
         return view('activiteiten.mail-deelnemers', [
             'activity' => $activity,
             'confirmedCount' => $this->recipients($activity, false)->count(),
             'allCount' => $this->recipients($activity, true)->count(),
+            // A selection from the registrations overview: exactly these people.
+            'selection' => $ids === null ? null : $this->recipients($activity, true, $ids),
         ]);
     }
 
@@ -40,9 +44,11 @@ class ParticipantMailController extends Controller
             'message' => ['required', 'string', 'max:10000'],
             'include_unconfirmed' => ['nullable', 'boolean'],
             'send_copy' => ['nullable', 'boolean'],
+            'ids' => ['nullable', 'array', 'max:1000'],
+            'ids.*' => ['integer'],
         ], [], ['subject' => 'onderwerp', 'message' => 'bericht']);
 
-        $recipients = $this->recipients($activity, $request->boolean('include_unconfirmed'));
+        $recipients = $this->recipients($activity, $request->boolean('include_unconfirmed'), $this->selectedIds($request));
 
         if ($recipients->isEmpty()) {
             return back()->withInput()->withErrors(['message' => 'Er is niemand om te mailen.']);
@@ -84,20 +90,37 @@ class ParticipantMailController extends Controller
     }
 
     /**
-     * Participants (optionally also those who never finished paying), one per e-mail address.
+     * Participants (optionally also those who never finished paying), or a selection, one per
+     * e-mail address.
      *
+     * @param  list<int>|null  $ids
      * @return Collection<int, Registration>
      */
-    private function recipients(Activity $activity, bool $includeUnconfirmed): Collection
+    private function recipients(Activity $activity, bool $includeUnconfirmed, ?array $ids = null): Collection
     {
         $query = $activity->registrations()->reorder('created_at');
 
-        if (! $includeUnconfirmed) {
+        if ($ids !== null) {
+            // Chosen by the organiser, confirmed or not; ids of other activities don't match.
+            $query->whereKey($ids);
+        } elseif (! $includeUnconfirmed) {
             $query->confirmed();
         }
 
         return $query->get()
             ->unique(fn (Registration $registration) => mb_strtolower(trim($registration->email)))
             ->values();
+    }
+
+    /**
+     * The ids selected on the registrations overview; null without a selection.
+     *
+     * @return list<int>|null
+     */
+    private function selectedIds(Request $request): ?array
+    {
+        $ids = $request->input('ids');
+
+        return is_array($ids) ? array_values(array_map('intval', array_slice($ids, 0, 1000))) : null;
     }
 }

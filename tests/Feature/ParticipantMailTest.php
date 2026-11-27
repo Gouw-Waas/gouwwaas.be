@@ -97,4 +97,59 @@ class ParticipantMailTest extends TestCase
 
         Mail::assertNothingSent();
     }
+
+    private function id(string $name): int
+    {
+        return $this->activity->registrations()->where('name', $name)->value('id');
+    }
+
+    public function test_mailing_a_selection(): void
+    {
+        $organiser = $this->activity->user;
+        $ids = [$this->id('Piet'), $this->id('Joris')];
+        $url = "/activiteiten/{$this->activity->slug}/deelnemers-mailen";
+
+        $this->actingAs($organiser)->get($url.'?'.http_build_query(['ids' => $ids]))
+            ->assertOk()
+            ->assertSee('2 geselecteerde deelnemers')
+            ->assertSee('Piet')
+            ->assertSee('Joris')
+            ->assertDontSee('Ook naar wie de online betaling');
+
+        $this->actingAs($organiser)
+            ->post($url, ['subject' => 'Hoi', 'message' => 'Test', 'send_copy' => '0', 'ids' => $ids])
+            ->assertSessionHas('status', 'Je bericht is verstuurd naar 2 deelnemers.');
+
+        Mail::assertSent(ParticipantMessage::class, 2);
+        Mail::assertSent(ParticipantMessage::class, fn (ParticipantMessage $mail) => $mail->hasTo('joris@example.com'));
+        Mail::assertNotSent(ParticipantMessage::class, fn (ParticipantMessage $mail) => $mail->hasTo('jan@example.com'));
+    }
+
+    public function test_selection_on_one_address_mails_once(): void
+    {
+        $this->actingAs($this->activity->user)
+            ->post("/activiteiten/{$this->activity->slug}/deelnemers-mailen", [
+                'subject' => 'Hoi', 'message' => 'Test', 'send_copy' => '0',
+                'ids' => [$this->id('Jan'), $this->id('Jan (broer)')],
+            ]);
+
+        Mail::assertSent(ParticipantMessage::class, 1);
+    }
+
+    public function test_foreign_ids_are_ignored(): void
+    {
+        $other = Activity::factory()->create(['user_id' => $this->activity->user_id]);
+        $stranger = $other->registrations()->create(['name' => 'Vreemde', 'email' => 'vreemde@example.com', 'answers' => []]);
+        $url = "/activiteiten/{$this->activity->slug}/deelnemers-mailen";
+
+        $this->actingAs($this->activity->user)
+            ->post($url, ['subject' => 'Hoi', 'message' => 'Test', 'send_copy' => '0', 'ids' => [$stranger->id, $this->id('Piet')]]);
+
+        Mail::assertSent(ParticipantMessage::class, 1);
+        Mail::assertNotSent(ParticipantMessage::class, fn (ParticipantMessage $mail) => $mail->hasTo('vreemde@example.com'));
+
+        $this->actingAs($this->activity->user)
+            ->post($url, ['subject' => 'Hoi', 'message' => 'Test', 'send_copy' => '0', 'ids' => [$stranger->id]])
+            ->assertSessionHasErrors(['message' => 'Er is niemand om te mailen.']);
+    }
 }
