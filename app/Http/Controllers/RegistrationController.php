@@ -54,7 +54,9 @@ class RegistrationController extends Controller
     {
         Gate::authorize('viewRegistrations', $activity);
 
-        $activity->load('fields', 'registrations');
+        // Only confirmed registrations (free, paid, or added by an organiser): payments still in
+        // progress stay out, and activities:archive deletes abandoned ones after a day.
+        $activity->load(['fields', 'registrations' => fn ($query) => $query->confirmed()]);
 
         return view('activiteiten.inschrijvingen', [
             'activity' => $activity,
@@ -73,7 +75,7 @@ class RegistrationController extends Controller
     {
         Gate::authorize('viewRegistrations', $activity);
 
-        $activity->load('fields', 'registrations');
+        $activity->load(['fields', 'registrations' => fn ($query) => $query->confirmed()]);
         $columns = $activity->answerColumns();
         $filename = "inschrijvingen-{$activity->slug}.xlsx";
 

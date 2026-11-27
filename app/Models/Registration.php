@@ -27,6 +27,9 @@ class Registration extends Model
 
     public const SOURCE_MANUAL = 'manual';
 
+    /** How long an unpaid online registration is kept before the nightly clean-up deletes it. */
+    public const ABANDONED_AFTER_HOURS = 24;
+
     protected function casts(): array
     {
         return [
@@ -81,6 +84,47 @@ class Registration extends Model
         $query->where(fn (Builder $q) => $q
             ->confirmed()
             ->orWhereIn('payment_status', self::IN_PROGRESS_STATUSES));
+    }
+
+    /**
+     * Online registrations for a paid activity that will never be confirmed: no payment was
+     * started, or Mollie ended it (failed, canceled, expired). Kept ABANDONED_AFTER_HOURS
+     * after the last change, so the payer can still "Opnieuw proberen" from their page;
+     * after that nobody comes back (they get no e-mail until they've paid).
+     *
+     * @param  Builder<Registration>  $query
+     */
+    public function scopeAbandoned(Builder $query): void
+    {
+        $query->unpaidOnline()->where('updated_at', '<', now()->subHours(self::ABANDONED_AFTER_HOURS));
+    }
+
+    /**
+     * Online registrations for a paid activity with no payment, or a failed one: not on the
+     * organisers' overview, and deleted once abandoned.
+     *
+     * @param  Builder<Registration>  $query
+     */
+    public function scopeUnpaidOnline(Builder $query): void
+    {
+        $query->where('amount_cents', '>', 0)
+            ->where('source', '!=', self::SOURCE_MANUAL)
+            ->where(fn (Builder $q) => $q
+                ->whereNull('payment_status')
+                ->orWhereIn('payment_status', self::FAILED_STATUSES));
+    }
+
+    /**
+     * Payments in progress that haven't changed for ABANDONED_AFTER_HOURS: Mollie's webhook
+     * may have been missed, so their status is checked again.
+     *
+     * @param  Builder<Registration>  $query
+     */
+    public function scopeStalePayment(Builder $query): void
+    {
+        $query->whereIn('payment_status', self::IN_PROGRESS_STATUSES)
+            ->whereNotNull('mollie_payment_id')
+            ->where('updated_at', '<', now()->subHours(self::ABANDONED_AFTER_HOURS));
     }
 
     public function isManual(): bool
