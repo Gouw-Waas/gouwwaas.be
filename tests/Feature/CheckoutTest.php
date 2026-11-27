@@ -81,6 +81,15 @@ class CheckoutTest extends TestCase
             ->assertSee('€ 12,50');
     }
 
+    public function test_the_pay_page_lets_its_form_redirect_through_mollie_to_the_bank(): void
+    {
+        $registration = $this->register($this->paidActivity());
+
+        // Browsers check each redirect of the pay form (Mollie → bank/PayPal) against form-action.
+        $csp = $this->get("/inschrijvingen/{$registration->token}")->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString("form-action 'self' https:", $csp);
+    }
+
     public function test_paying_sends_the_payer_to_mollie(): void
     {
         $registration = $this->register($this->paidActivity());
