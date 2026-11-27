@@ -41,8 +41,7 @@
                             <span class="visually-hidden">Profiel van </span><span class="account-name">{{ auth()->user()->name }}</span>
                         </a>
                         @can('admin')
-                            <a href="{{ route('gebruikers.index') }}" @class(['button', 'button-ghost', 'button-small', 'is-active' => request()->routeIs('gebruikers.*')])>Gebruikers</a>
-                            <a href="{{ route('attest.instellingen') }}" @class(['button', 'button-ghost', 'button-small', 'is-active' => request()->routeIs('attest.*')])>Attest</a>
+                            <a href="{{ route('organisatie.edit') }}" @class(['button', 'button-ghost', 'button-small', 'is-active' => request()->routeIs('organisatie.*', 'gebruikers.*', 'attest.*')])>Organisatie</a>
                         @endcan
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -87,21 +86,22 @@
     <script src="{{ asset('js/confirm.js') }}?v={{ filemtime(public_path('js/confirm.js')) }}"></script>
     <script src="{{ asset('js/site.js') }}?v={{ filemtime(public_path('js/site.js')) }}"></script>
 
+    @php($organisation = \App\Models\Organisation::current())
     <footer class="site-footer">
         <div class="container footer-inner">
             <div class="footer-about">
                 <img src="{{ asset('images/logo-200.webp') }}" alt="Gouw Waas" class="footer-logo" width="200" height="144" loading="lazy">
                 <div>
                     <address class="footer-address">
-                        <strong>Gouwhuis Karree</strong><br>
-                        Apostelstraat 5<br>
-                        9100 Sint-Niklaas
+                        <strong>{{ $organisation->building ?: $organisation->name }}</strong><br>
+                        {{ $organisation->street }}<br>
+                        {{ $organisation->city }}
                     </address>
                     <ul class="footer-links">
                         <li>
-                            <a href="mailto:gouwbureau@gouwwaas.be">
+                            <a href="mailto:{{ $organisation->email }}">
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
-                                gouwbureau@gouwwaas.be
+                                {{ $organisation->email }}
                             </a>
                         </li>
                         <li>
@@ -121,7 +121,7 @@
         </div>
         <div class="footer-bottom">
             <div class="container footer-bottom-inner">
-                <span>© {{ date('Y') }} Gouw Waas</span>
+                <span>© {{ date('Y') }} {{ $organisation->name }}</span>
                 <a href="{{ route('privacy') }}">Privacyverklaring</a>
             </div>
         </div>

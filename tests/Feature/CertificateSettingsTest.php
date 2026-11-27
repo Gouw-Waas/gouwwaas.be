@@ -32,17 +32,17 @@ class CertificateSettingsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/beheer/attest')->assertForbidden();
-        $this->actingAs($user)->put('/beheer/attest', ['stamp' => $this->png()])->assertForbidden();
-        $this->actingAs($user)->get('/beheer/attest/voorbeeld.pdf')->assertForbidden();
+        $this->actingAs($user)->get('/organisatie/attest')->assertForbidden();
+        $this->actingAs($user)->put('/organisatie/attest', ['stamp' => $this->png()])->assertForbidden();
+        $this->actingAs($user)->get('/organisatie/attest/voorbeeld.pdf')->assertForbidden();
     }
 
     public function test_upload_replaces_stamp(): void
     {
         Stamp::delete();
 
-        $this->actingAs($this->admin)->put('/beheer/attest', ['stamp' => $this->png()])
-            ->assertRedirect('/beheer/attest')
+        $this->actingAs($this->admin)->put('/organisatie/attest', ['stamp' => $this->png()])
+            ->assertRedirect('/organisatie/attest')
             ->assertSessionHas('status', 'De stempel is opgeslagen.');
 
         $this->assertTrue(Stamp::exists());
@@ -52,25 +52,24 @@ class CertificateSettingsTest extends TestCase
     {
         $message = 'Laad een PNG-afbeelding op van maximaal 2 MB.';
 
-        $this->actingAs($this->admin)->put('/beheer/attest', [])->assertSessionHasErrors(['stamp' => $message]);
-        $this->actingAs($this->admin)->put('/beheer/attest', ['stamp' => UploadedFile::fake()->create('stempel.pdf', 10, 'application/pdf')])
+        $this->actingAs($this->admin)->put('/organisatie/attest', [])->assertSessionHasErrors(['stamp' => $message]);
+        $this->actingAs($this->admin)->put('/organisatie/attest', ['stamp' => UploadedFile::fake()->create('stempel.pdf', 10, 'application/pdf')])
             ->assertSessionHasErrors(['stamp' => $message]);
-        $this->actingAs($this->admin)->put('/beheer/attest', ['stamp' => $this->png(2100)])->assertSessionHasErrors(['stamp' => $message]);
+        $this->actingAs($this->admin)->put('/organisatie/attest', ['stamp' => $this->png(2100)])->assertSessionHasErrors(['stamp' => $message]);
     }
 
     public function test_page_shows_signers_and_warns_when_missing(): void
     {
-        $this->actingAs($this->admin)->get('/beheer/attest')
+        $this->actingAs($this->admin)->get('/organisatie/attest')
             ->assertOk()
             ->assertSee('An Peeters')
             ->assertSee('Bert Claes')
-            ->assertSee('Apostelstraat 5')
             ->assertSee('data:image/png;base64,', false);
 
         Stamp::delete();
         $this->commissaris->members()->get()->each->delete();
 
-        $this->actingAs($this->admin)->get('/beheer/attest')
+        $this->actingAs($this->admin)->get('/organisatie/attest')
             ->assertOk()
             ->assertSee('Er is nog geen stempel opgeladen.')
             ->assertSee('Er staat nog geen gouwcommissaris op Wie is wie.');
@@ -78,12 +77,12 @@ class CertificateSettingsTest extends TestCase
 
     public function test_preview_is_a_pdf(): void
     {
-        $response = $this->actingAs($this->admin)->get('/beheer/attest/voorbeeld.pdf')->assertOk();
+        $response = $this->actingAs($this->admin)->get('/organisatie/attest/voorbeeld.pdf')->assertOk();
         $this->assertStringStartsWith('%PDF-', $response->getContent());
 
         Stamp::delete();
-        $this->actingAs($this->admin)->from('/beheer/attest')->get('/beheer/attest/voorbeeld.pdf')
-            ->assertRedirect('/beheer/attest')
+        $this->actingAs($this->admin)->from('/organisatie/attest')->get('/organisatie/attest/voorbeeld.pdf')
+            ->assertRedirect('/organisatie/attest')
             ->assertSessionHasErrors('certificate');
     }
 }

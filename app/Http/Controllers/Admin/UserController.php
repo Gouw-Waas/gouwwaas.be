@@ -14,12 +14,12 @@ class UserController extends Controller
 {
     public function index(): View
     {
-        return view('gebruikers.index', ['users' => User::orderBy('name')->get()]);
+        return view('organisatie.gebruikers.index', ['users' => User::orderBy('name')->get()]);
     }
 
     public function create(): View
     {
-        return view('gebruikers.form', ['user' => new User]);
+        return view('organisatie.gebruikers.form', ['user' => new User]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -36,7 +36,7 @@ class UserController extends Controller
 
     public function edit(User $gebruiker): View
     {
-        return view('gebruikers.form', ['user' => $gebruiker]);
+        return view('organisatie.gebruikers.form', ['user' => $gebruiker]);
     }
 
     public function update(Request $request, User $gebruiker): RedirectResponse

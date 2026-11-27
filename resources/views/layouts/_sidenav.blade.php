@@ -29,7 +29,7 @@
                             </a>
                         </li>
                         @can('admin')
-                            <li><a href="{{ route('gebruikers.index') }}" @class(['sidenav-link', 'active' => request()->routeIs('gebruikers.*')])>Gebruikers</a></li>
+                            <li><a href="{{ route('organisatie.edit') }}" @class(['sidenav-link', 'active' => request()->routeIs('organisatie.*', 'gebruikers.*', 'attest.*')])>Organisatie</a></li>
                         @endcan
                     </ul>
                     <form method="POST" action="{{ route('logout') }}">

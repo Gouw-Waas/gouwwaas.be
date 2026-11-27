@@ -86,7 +86,10 @@ The site is in Dutch (`APP_LOCALE=nl`).
 - `/login` – login; once logged in the header shows "Welkom {naam}!"
 - `/wachtwoord-vergeten` – request a password reset e-mail
 - `/profiel` – logged-in users: see name and e-mail, change password
-- `/gebruikers` – admins only: add, edit and delete users, force a password reset
+- `/organisatie` – admins only ("Organisatie" in the header), three tabs: **Gegevens**
+  (the organisation's name, address and e-mail), **Gebruikers** (`/organisatie/gebruikers`:
+  add, edit and delete users, force a password reset) and **Attest**
+  (`/organisatie/attest`: certificate stamp, signers and preview)
 
 **Users and admins.** Admins (`users.is_admin`) manage the other users. The flag
 cannot be set through the website: the account that existed when the
@@ -194,14 +197,22 @@ button can be used again for latecomers. Each row also has an "Attest" download.
 is made with dompdf (needs PHP's GD extension); the code is in `app/Certificates/`, the
 layout in `resources/views/attesten/attest.blade.php`.
 
-**Certificate stamp and signers.** Admins upload the stamp (PNG) on `/beheer/attest`
-("Attest" in the header); it is stored on the private disk at
+**Certificate stamp and signers.** Admins upload the stamp (PNG) on Organisatie → Attest
+(`/organisatie/attest`); it is stored on the private disk at
 `storage/app/private/attesten/stempel.png`. The page also has a preview. Certificates are
-signed by everyone with the Gouwcommissaris function on Wie is wie. The organisation's
-name, address and logo come from `organisation` in `config/gouw.php` (also used on the
-privacy page and as the location placeholder); the Karree page should use it too once
-both branches are on `main`. Without a stamp or a Gouwcommissaris, no certificates can
+signed by everyone with the Gouwcommissaris function on Wie is wie. Without a stamp or a
+Gouwcommissaris, no certificates can
 be made and the overview says why.
+
+**Organisation details.** The name, building, address and e-mail of the
+organisation are edited by admins on Organisatie → Gegevens (`/organisatie`) and stored
+in the one-row `organisation` table (`App\Models\Organisation::current()`). They are
+used on certificates, as reply-to address of certificate mails, in the footer, on the
+privacy page and as the location placeholder. Until an admin saves that page, the
+defaults from `organisation` in `config/gouw.php` are used. The logo on certificates is
+uploaded on the same tab (PNG, private disk: `storage/app/private/organisatie/logo.png`);
+without an upload it's `logo` in that config file. The website's own logos (header,
+footer, link previews) are the optimised files in `public/images/`.
 
 **Mailing participants.** Select people in the overview (or "select all") and choose
 Mailen in the selection bar: the message goes to exactly those people (paid or not), one

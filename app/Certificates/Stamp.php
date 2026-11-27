@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * The gouw stamp printed on participation certificates: one PNG on the private disk,
- * uploaded by admins (Beheer → Attest).
+ * uploaded by admins (Organisatie → Attest).
  */
 class Stamp
 {

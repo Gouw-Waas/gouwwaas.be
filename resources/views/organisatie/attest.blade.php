@@ -2,17 +2,22 @@
 
 @section('title', 'Attest')
 
+{{-- Organisatie → Attest: the stamp and signers on participation certificates (admins). --}}
 @section('content')
     <section class="page-header">
-        <div class="container page-header-row">
-            <h1>Deelnameattest</h1>
-            @unless ($problems)
-                <a href="{{ route('attest.voorbeeld') }}" class="button button-ghost" target="_blank" rel="noopener">Voorbeeld bekijken</a>
-            @endunless
+        <div class="container">
+            <h1>Organisatie</h1>
         </div>
+        @include('organisatie._tabs')
     </section>
 
     <section class="container section">
+        @unless ($problems)
+            <div class="section-actions">
+                <a href="{{ route('attest.voorbeeld') }}" class="button button-ghost" target="_blank" rel="noopener">Voorbeeld bekijken</a>
+            </div>
+        @endunless
+
         @error('certificate')
             <p class="flash flash-error" role="alert">{{ $message }}</p>
         @enderror
@@ -21,7 +26,7 @@
         @endforeach
 
         <p class="lead">
-            Activiteiten met vormingsuren geven aanwezige deelnemers een deelnameattest (PDF). Hier beheer je wat erop staat.
+            Activiteiten met vormingsuren geven aanwezige deelnemers een deelnameattest (PDF). Hier beheer je wat erop staat; de naam en het adres van de organisatie komen uit <a href="{{ route('organisatie.edit') }}">Gegevens</a>.
         </p>
 
         <div class="card">
@@ -54,16 +59,6 @@
                 </ul>
             @endif
             <p class="hint">Iedereen met de functie Gouwcommissaris op <a href="{{ route('wie-is-wie') }}">Wie is wie</a>. Pas het daar aan.</p>
-        </div>
-
-        <div class="card">
-            <h2>Organisatie</h2>
-            <p>
-                {{ $organisation['full_name'] }}<br>
-                {{ $organisation['building'] }}, {{ $organisation['street'] }}, {{ $organisation['city'] }}<br>
-                {{ $organisation['email'] }}
-            </p>
-            <p class="hint">Deze gegevens staan in <code>config/gouw.php</code> (vraag het aan de webmaster om ze te wijzigen).</p>
         </div>
     </section>
 @endsection
