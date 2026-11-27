@@ -20,6 +20,10 @@ final class ParticipantList
 
     public static function parse(string $text): self
     {
+        // Excel on Windows saves "CSV" as Windows-1252, not UTF-8.
+        if (! mb_check_encoding($text, 'UTF-8')) {
+            $text = mb_convert_encoding($text, 'UTF-8', 'Windows-1252');
+        }
         $text = preg_replace('/^\x{FEFF}/u', '', $text) ?? $text;
 
         $participants = [];
@@ -55,8 +59,8 @@ final class ParticipantList
                 continue;
             }
 
-            // A header line ("Naam;E-mail") on top of an export.
-            if ($isFirst && count($fields) === 2 && ! str_contains($line, '@')) {
+            // A header line ("Naam;E-mail") on top of an export, not a person whose address lacks an "@".
+            if ($isFirst && count($fields) === 2 && self::isHeader($fields)) {
                 continue;
             }
 
@@ -64,6 +68,33 @@ final class ParticipantList
         }
 
         return new self($participants, $invalid);
+    }
+
+    /**
+     * Both lists' participants (duplicates collapsed) and invalid lines.
+     */
+    public function with(self $other): self
+    {
+        $participants = [];
+        foreach ([...$this->participants, ...$other->participants] as $participant) {
+            $participants[mb_strtolower($participant['name'])."\n".mb_strtolower($participant['email'])] ??= $participant;
+        }
+
+        return new self(array_values($participants), [...$this->invalid, ...$other->invalid]);
+    }
+
+    /**
+     * @param  list<string>  $fields
+     */
+    private static function isHeader(array $fields): bool
+    {
+        foreach ($fields as $field) {
+            if (! preg_match('/^[\p{L} -]*(naam|name|mail)[\p{L} -]*$/iu', $field)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

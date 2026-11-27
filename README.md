@@ -213,6 +213,9 @@ order; an Excel export with a header works). Every line is checked before anythi
 Each participant gets the same certificate mail; the certificate adds "georganiseerd door …".
 **Nothing is stored**: no activity, no participants, no upload, and a failed mail is logged
 without the address. Failed participants are put back in the form so a resend reaches only them.
+(After an error the form's input is flashed to the session for that one redirect and is gone
+once the form has been shown again.) At most 100 participants per send, so a send stays well
+within a proxy timeout; the button is disabled once confirmed, so a double click can't send twice.
 
 **Organisation details.** The name, building, address and e-mail of the
 organisation are edited by admins on Organisatie → Gegevens (`/organisatie`) and stored

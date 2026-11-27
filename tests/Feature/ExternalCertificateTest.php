@@ -135,11 +135,50 @@ class ExternalCertificateTest extends TestCase
 
     public function test_too_many_refused(): void
     {
-        $lines = implode("\n", array_map(fn (int $i) => "P{$i};p{$i}@example.com", range(1, 1001)));
+        $lines = implode("\n", array_map(fn (int $i) => "P{$i};p{$i}@example.com", range(1, 101)));
 
         $this->send(['participants' => $lines])
-            ->assertSessionHasErrors(['participants' => 'Maximaal 1000 deelnemers per keer.']);
+            ->assertSessionHasErrors(['participants' => 'Maximaal 100 deelnemers per keer: verstuur een grotere groep in delen.']);
         Mail::assertNothingSent();
+    }
+
+    public function test_file_errors_name_the_files_own_line(): void
+    {
+        $this->send([
+            'participants' => "An;an@example.com\nBert;bert@example.com",
+            'file' => UploadedFile::fake()->createWithContent('lijst.csv', "\u{FEFF}Naam;E-mail\nCees;cees@example.com\nDries\n"),
+        ])->assertSessionHasErrors('participants');
+
+        $this->assertStringContainsString('bestand, regel 3: Dries', session('errors')->first('participants'));
+        Mail::assertNothingSent();
+    }
+
+    public function test_textarea_and_file_together(): void
+    {
+        $this->send([
+            'participants' => "An Peeters;an@example.com\nCees;cees@example.com",
+            'file' => UploadedFile::fake()->createWithContent('lijst.csv', "\u{FEFF}Naam;E-mail\nCees;cees@example.com\nDries;dries@example.com\n"),
+        ])->assertSessionHas('status', '3 attesten verstuurd.');
+    }
+
+    public function test_send_button_confirms_neutrally_and_only_once(): void
+    {
+        $this->actingAs(User::factory()->admin()->create())->get('/organisatie/extern-attest')
+            ->assertSee('data-confirm-button="Versturen"', false)
+            ->assertSee('data-confirm-tone="neutral"', false)
+            ->assertSee('data-submit-once', false);
+    }
+
+    public function test_flashed_list_is_gone_from_the_session_once_shown(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->send(['participants' => "An;flash-check@example.com\nBert"]);
+
+        $this->actingAs($admin)->get('/organisatie/extern-attest')->assertSee('flash-check@example.com');
+        $this->assertNull(session()->getOldInput('participants'));
+        $this->assertFalse(session()->has('errors'));
+
+        $this->actingAs($admin)->get('/organisatie/extern-attest')->assertDontSee('flash-check@example.com');
     }
 
     public function test_activity_fields_and_hours_validated(): void

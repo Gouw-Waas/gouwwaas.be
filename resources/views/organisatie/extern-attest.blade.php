@@ -21,7 +21,8 @@
 
         <form method="POST" action="{{ route('attest.extern.versturen') }}" class="card form-card form-card-left form" enctype="multipart/form-data"
               data-confirm="Attesten versturen?"
-              data-confirm-text="Iedereen in de lijst krijgt een attest per e-mail. Er wordt niets bewaard.">
+              data-confirm-text="Iedereen in de lijst krijgt een attest per e-mail. Er wordt niets bewaard."
+              data-confirm-button="Versturen" data-confirm-tone="neutral" data-submit-once>
             @csrf
 
             <p class="muted">

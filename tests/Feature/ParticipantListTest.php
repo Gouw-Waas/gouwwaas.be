@@ -51,6 +51,37 @@ class ParticipantListTest extends TestCase
         $this->assertSame([['line' => 2, 'text' => 'Naam;E-mail']], $list->invalid);
     }
 
+    public function test_first_line_with_broken_email_is_not_taken_for_a_header(): void
+    {
+        $list = ParticipantList::parse("An Peeters;an.example.com\nBert;bert@example.com");
+
+        $this->assertSame([['line' => 1, 'text' => 'An Peeters;an.example.com']], $list->invalid);
+    }
+
+    public function test_common_headers_skipped(): void
+    {
+        foreach (['Naam;E-mail', 'Name,Email', 'E-mailadres;Voornaam en naam', 'naam;mail'] as $header) {
+            $this->assertSame([], ParticipantList::parse("{$header}\nAn;an@example.com")->invalid, $header);
+        }
+    }
+
+    public function test_windows_1252_export_is_converted(): void
+    {
+        $list = ParticipantList::parse("Naam;E-mail\r\nZo\xEB \xD6l\xE7er;zoe@example.com\r\n");
+
+        $this->assertSame([['name' => 'Zoë Ölçer', 'email' => 'zoe@example.com']], $list->participants);
+    }
+
+    public function test_with_merges_and_collapses_duplicates(): void
+    {
+        $merged = ParticipantList::parse('An;an@example.com')->with(ParticipantList::parse("\u{FEFF}An;an@example.com\nBert;bert@example.com"));
+
+        $this->assertSame([
+            ['name' => 'An', 'email' => 'an@example.com'],
+            ['name' => 'Bert', 'email' => 'bert@example.com'],
+        ], $merged->participants);
+    }
+
     public function test_duplicates_collapsed(): void
     {
         $list = ParticipantList::parse("An;an@example.com\nAn;AN@example.com\nLien;an@example.com");

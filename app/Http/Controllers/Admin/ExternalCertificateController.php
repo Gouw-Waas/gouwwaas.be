@@ -24,7 +24,11 @@ use Throwable;
  */
 class ExternalCertificateController extends Controller
 {
-    public const MAX_PARTICIPANTS = 1000;
+    /**
+     * About 0.3 s per PDF plus SMTP: this keeps one send well within a proxy's 60 s timeout.
+     * A timed-out send would leave no way to tell who got their certificate.
+     */
+    public const MAX_PARTICIPANTS = 100;
 
     private const ACTIVITY_FIELDS = ['title', 'location', 'starts_on', 'ends_on', 'training_hours', 'organiser'];
 
@@ -60,12 +64,16 @@ class ExternalCertificateController extends Controller
             'file' => 'bestand',
         ]);
 
-        // Read in memory only: the upload is never stored.
-        $text = ($validated['participants'] ?? '')."\n".($request->hasFile('file') ? (string) $request->file('file')->get() : '');
-        $list = ParticipantList::parse($text);
+        // Parsed separately, so an error names the line in the file itself. The upload is only
+        // read in memory, never stored.
+        $typed = ParticipantList::parse($validated['participants'] ?? '');
+        $file = ParticipantList::parse($request->hasFile('file') ? (string) $request->file('file')->get() : '');
+        $list = $typed->with($file);
 
         if ($list->invalid) {
-            $lines = collect($list->invalid)->map(fn (array $invalid) => "regel {$invalid['line']}: {$invalid['text']}")->implode('; ');
+            $lines = collect($typed->invalid)->map(fn (array $invalid) => "regel {$invalid['line']}: {$invalid['text']}")
+                ->merge(collect($file->invalid)->map(fn (array $invalid) => "bestand, regel {$invalid['line']}: {$invalid['text']}"))
+                ->implode('; ');
 
             return $this->backToForm(['participants' => "Deze regels kloppen niet (naam en e-mailadres per regel): {$lines}."]);
         }
@@ -75,7 +83,7 @@ class ExternalCertificateController extends Controller
         }
 
         if (count($list->participants) > self::MAX_PARTICIPANTS) {
-            return $this->backToForm(['participants' => 'Maximaal '.self::MAX_PARTICIPANTS.' deelnemers per keer.']);
+            return $this->backToForm(['participants' => 'Maximaal '.self::MAX_PARTICIPANTS.' deelnemers per keer: verstuur een grotere groep in delen.']);
         }
 
         if ($problem = $renderer->problems()[0] ?? null) {

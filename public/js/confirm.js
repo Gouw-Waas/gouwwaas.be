@@ -6,7 +6,8 @@
  *       data-confirm-details="some-template-id"                      (optional, <template> with HTML)
  *       data-confirm-button="Verwijderen"                            (optional, default "Verwijderen")
  *       data-confirm-cancel="Terug"                                  (optional, default "Annuleren")
- *       data-confirm-tone="neutral">                                 (optional: not destructive, no red)
+ *       data-confirm-tone="neutral"                                  (optional: not destructive, no red)
+ *       data-submit-once>                                            (optional: disable the submit button once confirmed)
  *
  * Inputs in the template can belong to the form with form="<form id>": they are sent along.
  *
@@ -55,6 +56,10 @@
         if (dialog.returnValue === 'ok' && pending) {
             pending.dataset.confirmed = '1';
             pending.requestSubmit ? pending.requestSubmit() : pending.submit();
+            // A second click while a slow send is running would send everything again.
+            if (pending.hasAttribute('data-submit-once')) {
+                pending.querySelectorAll('button[type=submit], button:not([type])').forEach((button) => { button.disabled = true; });
+            }
         }
         pending = null;
     });
