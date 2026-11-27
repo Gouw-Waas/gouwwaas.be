@@ -111,6 +111,23 @@ class AttendanceTest extends TestCase
         $this->assertNull($stranger->fresh()->present_at);
     }
 
+    public function test_attendance_toolbar_counts_and_hides_everyone_present_when_done(): void
+    {
+        $url = "/activiteiten/{$this->activity->slug}/inschrijvingen";
+        $this->registrations['Jan']->forceFill(['present_at' => now()])->save();
+
+        $this->actingAs($this->activity->user)->get($url)
+            ->assertSeeText('1 van 3 aanwezig')
+            ->assertSee('Iedereen aanwezig');
+
+        $this->registrations['Piet']->forceFill(['present_at' => now()])->save();
+
+        // Every confirmed registration is ticked: nothing left for the button to do.
+        $this->actingAs($this->activity->user)->get($url)
+            ->assertSeeText('2 van 3 aanwezig')
+            ->assertDontSee('Iedereen aanwezig');
+    }
+
     public function test_overview_shows_attendance_and_export_has_column(): void
     {
         $this->registrations['Jan']->forceFill(['present_at' => now()])->save();

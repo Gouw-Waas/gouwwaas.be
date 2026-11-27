@@ -11,20 +11,6 @@
                 <div class="header-actions">
                     <a href="{{ route('activiteiten.inschrijvingen.create', $activity) }}" class="button">Inschrijving toevoegen</a>
                     @if ($activity->registrations->isNotEmpty())
-                        <form method="POST" action="{{ route('activiteiten.aanwezigheid.alle', $activity) }}">
-                            @csrf
-                            <button type="submit" class="button button-ghost">Iedereen aanwezig</button>
-                        </form>
-                        @if ($certificateCount)
-                            <form method="POST" action="{{ route('activiteiten.attesten.versturen', $activity) }}"
-                                  data-confirm="{{ $certificateCount === 1 ? '1 attest' : $certificateCount.' attesten' }} versturen?"
-                                  data-confirm-text="Elke aanwezige deelnemer krijgt het eigen attest per e-mail. Wie al een attest kreeg, krijgt het niet nog eens."
-                                  data-confirm-button="Versturen"
-                                  data-confirm-tone="neutral">
-                                @csrf
-                                <button type="submit" class="button">Attesten versturen ({{ $certificateCount }})</button>
-                            </form>
-                        @endif
                         <a href="{{ route('activiteiten.mail', $activity) }}" class="button button-ghost">Deelnemers mailen</a>
                         <a href="{{ route('activiteiten.inschrijvingen.export', $activity) }}" class="button button-ghost">Download (Excel)</a>
                     @endif
@@ -35,6 +21,10 @@
                 $unfinished = $activity->registrations->count() - $confirmed;
                 // Added by an organiser, paying later.
                 $toPay = $activity->registrations->filter(fn ($registration) => $registration->isManual() && $registration->canBeMarkedPaid())->count();
+                // Attendance and certificates (toolbar above the table).
+                $presentCount = $activity->registrations->filter->isPresent()->count();
+                $everyonePresent = $activity->registrations->filter->isConfirmed()->every->isPresent();
+                $sentCount = $activity->registrations->whereNotNull('certificate_sent_at')->count();
             @endphp
             <p class="lead">
                 {{ $confirmed }} {{ $confirmed === 1 ? 'inschrijving' : 'inschrijvingen' }}
@@ -74,8 +64,37 @@
                 <p>Nog niemand ingeschreven.</p>
             </div>
         @else
+            <div class="registrations-toolbar">
+                <div class="toolbar-group">
+                    <span class="toolbar-label"><strong>{{ $presentCount }} van {{ $activity->registrations->count() }}</strong> aanwezig</span>
+                    @unless ($everyonePresent)
+                        <form method="POST" action="{{ route('activiteiten.aanwezigheid.alle', $activity) }}">
+                            @csrf
+                            <button type="submit" class="button button-ghost button-small">Iedereen aanwezig</button>
+                        </form>
+                    @endunless
+                </div>
+                @if ($activity->hasCertificates())
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">
+                            Attesten ({{ $activity->trainingHoursLabel() }} vormingsuren)@if ($sentCount): <strong>{{ $sentCount }}</strong> verstuurd @endif
+                        </span>
+                        @if ($certificateCount)
+                            <form method="POST" action="{{ route('activiteiten.attesten.versturen', $activity) }}"
+                                  data-confirm="{{ $certificateCount === 1 ? '1 attest' : $certificateCount.' attesten' }} versturen?"
+                                  data-confirm-text="Elke aanwezige deelnemer krijgt het eigen attest per e-mail. Wie al een attest kreeg, krijgt het niet nog eens."
+                                  data-confirm-button="Versturen"
+                                  data-confirm-tone="neutral">
+                                @csrf
+                                <button type="submit" class="button button-small">Attesten versturen ({{ $certificateCount }})</button>
+                            </form>
+                        @endif
+                    </div>
+                @endif
+            </div>
+
             <div class="table-scroll" tabindex="0" role="region" aria-label="Inschrijvingen">
-                <table class="data-table">
+                <table class="data-table registrations-table">
                     <thead>
                         <tr>
                             <th scope="col">Ingeschreven op</th>
@@ -96,8 +115,9 @@
                             <tr id="inschrijving-{{ $registration->id }}" @class(['row-unconfirmed' => ! $registration->isConfirmed()])>
                                 <td class="nowrap">{{ $registration->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="nowrap">{{ $registration->name }}</td>
-                                <td class="nowrap attendance">
-                                    <form method="POST" action="{{ route('activiteiten.aanwezigheid', [$activity, $registration->id]) }}">
+                                <td class="nowrap">
+                                    <div class="attendance">
+                                    <form class="attendance-form" method="POST" action="{{ route('activiteiten.aanwezigheid', [$activity, $registration->id]) }}">
                                         @csrf
                                         <input type="hidden" name="present" value="0">
                                         <label class="checkbox">
@@ -107,8 +127,9 @@
                                         <noscript><button type="submit" class="button button-ghost">Opslaan</button></noscript>
                                     </form>
                                     @if ($registration->certificate_sent_at)
-                                        <span class="muted small" title="{{ $registration->certificate_sent_at->format('d/m/Y H:i') }}">attest verstuurd</span>
+                                        <span class="badge badge-small" title="Verstuurd op {{ $registration->certificate_sent_at->format('d/m/Y H:i') }}">attest verstuurd</span>
                                     @endif
+                                    </div>
                                 </td>
                                 <td class="nowrap"><a href="mailto:{{ $registration->email }}">{{ $registration->email }}</a></td>
                                 @unless ($activity->isFree() && $activity->registrations->every->isFree())
@@ -126,10 +147,12 @@
                                     <td>{{ $registration->answerFor($column['id']) }}</td>
                                 @endforeach
                                 <td class="nowrap">
-                                    @if ($activity->hasCertificates() && $registration->isPresent() && $registration->isConfirmed())
-                                        <a href="{{ route('activiteiten.attest', [$activity, $registration->id]) }}" class="button button-ghost button-small">Attest</a>
-                                    @endif
-                                    @include('activiteiten._cancel-registration', ['registration' => $registration])
+                                    <div class="row-actions">
+                                        @if ($activity->hasCertificates() && $registration->isPresent() && $registration->isConfirmed())
+                                            <a href="{{ route('activiteiten.attest', [$activity, $registration->id]) }}" class="button button-ghost button-small" download>Attest</a>
+                                        @endif
+                                        @include('activiteiten._cancel-registration', ['registration' => $registration])
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
