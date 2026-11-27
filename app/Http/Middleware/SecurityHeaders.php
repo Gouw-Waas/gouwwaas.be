@@ -21,8 +21,12 @@ class SecurityHeaders
 
     private const ADDRESS_SEARCH = 'https://nominatim.openstreetmap.org';
 
-    /** The pay form redirects to Mollie's checkout; browsers check that against form-action. */
-    private const PAYMENTS = 'https://*.mollie.com';
+    /**
+     * Browsers check every redirect of a form submission against form-action, and only report
+     * the first URL. The pay form goes /betalen → Mollie → possibly a bank or PayPal, so the
+     * page with that form allows any https target; every other page only posts to the site.
+     */
+    private const PAY_PAGE_FORM_TARGETS = 'https:';
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -44,14 +48,16 @@ class SecurityHeaders
 
         // Laravel's own error page (only with APP_DEBUG) uses inline scripts without a nonce.
         if (! (config('app.debug') && property_exists($response, 'exception') && $response->exception)) {
-            $headers->set('Content-Security-Policy', $this->policy($nonce, $request->isSecure()));
+            $headers->set('Content-Security-Policy', $this->policy($nonce, $request->isSecure(), $request->routeIs('inschrijvingen.show')));
         }
 
         return $response;
     }
 
-    private function policy(string $nonce, bool $secure): string
+    private function policy(string $nonce, bool $secure, bool $payPage): string
     {
+        $formAction = "form-action 'self'".($payPage ? ' '.self::PAY_PAGE_FORM_TARGETS : '');
+
         $directives = [
             "default-src 'self'",
             "script-src 'self' 'nonce-{$nonce}'",
@@ -59,7 +65,7 @@ class SecurityHeaders
             "img-src 'self' data: blob: ".self::MAP_TILES,
             "connect-src 'self' ".self::ADDRESS_SEARCH,
             "font-src 'self'",
-            "form-action 'self' ".self::PAYMENTS,
+            $formAction,
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "object-src 'none'",

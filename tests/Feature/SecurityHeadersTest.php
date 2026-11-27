@@ -25,7 +25,7 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString("object-src 'none'", $csp);
         $this->assertStringContainsString('https://geo.api.vlaanderen.be', $csp);       // map tiles
         $this->assertStringContainsString('https://nominatim.openstreetmap.org', $csp); // address search
-        $this->assertStringContainsString("form-action 'self' https://*.mollie.com", $csp); // pay → checkout
+        $this->assertStringContainsString("form-action 'self';", $csp); // only the pay page posts elsewhere
         $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $csp);
     }
 
