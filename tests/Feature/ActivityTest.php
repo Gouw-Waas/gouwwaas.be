@@ -147,6 +147,37 @@ class ActivityTest extends TestCase
         $this->assertSame('Gratis', Activity::firstOrFail()->priceLabel());
     }
 
+    public function test_vormingsuren_are_optional_and_accept_half_hours(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post('/activiteiten', $this->payload(['title' => 'Cursus', 'training_hours' => '7,5']));
+        $activity = Activity::where('title', 'Cursus')->firstOrFail();
+        $this->assertEquals(7.5, $activity->training_hours);
+        $this->assertSame('7,5', $activity->trainingHoursLabel());
+        $this->assertTrue($activity->hasCertificates());
+
+        $this->actingAs($user)->post('/activiteiten', $this->payload(['title' => 'Dag', 'training_hours' => '8']));
+        $this->assertSame('8', Activity::where('title', 'Dag')->firstOrFail()->trainingHoursLabel());
+
+        $this->actingAs($user)->post('/activiteiten', $this->payload(['title' => 'Feest', 'training_hours' => '']));
+        $feest = Activity::where('title', 'Feest')->firstOrFail();
+        $this->assertNull($feest->training_hours);
+        $this->assertNull($feest->trainingHoursLabel());
+        $this->assertFalse($feest->hasCertificates());
+    }
+
+    public function test_vormingsuren_validation(): void
+    {
+        foreach (['abc', '0', '7,25'] as $value) {
+            $this->actingAs(User::factory()->create())
+                ->post('/activiteiten', $this->payload(['training_hours' => $value]))
+                ->assertSessionHasErrors(['training_hours' => 'Vul een aantal uren in, bv. 3 of 7,5.']);
+        }
+
+        $this->assertSame(0, Activity::count());
+    }
+
     public function test_deadline_must_be_before_the_start_and_dropdowns_need_options(): void
     {
         $this->actingAs(User::factory()->create())->post('/activiteiten', $this->payload([

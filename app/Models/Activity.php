@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
  * @property Carbon $registration_deadline
  * @property string|null $image_path
  */
-#[Fillable(['title', 'description', 'location', 'starts_at', 'ends_at', 'registration_deadline', 'price_cents', 'capacity'])]
+#[Fillable(['title', 'description', 'location', 'starts_at', 'ends_at', 'registration_deadline', 'price_cents', 'capacity', 'training_hours'])]
 class Activity extends Model
 {
     /** @use HasFactory<ActivityFactory> */
@@ -35,6 +35,7 @@ class Activity extends Model
             'ends_at' => 'datetime',
             'registration_deadline' => 'datetime',
             'price_cents' => 'integer',
+            'training_hours' => 'decimal:1',
         ];
     }
 
@@ -266,6 +267,28 @@ class Activity extends Model
     public static function euro(int $cents): string
     {
         return '€ '.number_format($cents / 100, 2, ',', '.');
+    }
+
+    /**
+     * Activities with vormingsuren give attendees a participation certificate.
+     */
+    public function hasCertificates(): bool
+    {
+        return $this->training_hours !== null;
+    }
+
+    /**
+     * "7,5" or "8"; null without vormingsuren.
+     */
+    public function trainingHoursLabel(): ?string
+    {
+        if ($this->training_hours === null) {
+            return null;
+        }
+
+        $hours = (float) $this->training_hours;
+
+        return fmod($hours, 1.0) === 0.0 ? (string) (int) $hours : number_format($hours, 1, ',', '');
     }
 
     public function isRegistrationOpen(): bool

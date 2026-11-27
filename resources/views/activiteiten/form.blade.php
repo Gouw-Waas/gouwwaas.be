@@ -134,6 +134,15 @@
                             <p class="error" id="capacity-error">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <div class="field">
+                        <label for="training_hours">Vormingsuren <span class="muted">(optioneel)</span></label>
+                        <input id="training_hours" type="text" name="training_hours" inputmode="decimal" maxlength="4" placeholder="bv. 7,5" value="{{ old('training_hours', $activity->trainingHoursLabel()) }}" aria-describedby="training_hours-hint @error('training_hours') training_hours-error @enderror" @error('training_hours') aria-invalid="true" @enderror>
+                        <p class="hint" id="training_hours-hint">Alleen nodig als deelnemers een deelnameattest krijgen. Leeg = geen attesten.</p>
+                        @error('training_hours')
+                            <p class="error" id="training_hours-error">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
