@@ -127,7 +127,7 @@ class CertificateRenderer
     /**
      * "op 12 december 2026", or "van 12 december 2026 tot 13 december 2026".
      */
-    private function dateText(Activity $activity): string
+    public function dateText(Activity $activity): string
     {
         if (! $activity->ends_at || $activity->ends_at->isSameDay($activity->starts_at)) {
             return 'op '.$this->longDate($activity->starts_at);

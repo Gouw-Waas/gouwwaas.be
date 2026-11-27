@@ -86,10 +86,11 @@ The site is in Dutch (`APP_LOCALE=nl`).
 - `/login` – login; once logged in the header shows "Welkom {naam}!"
 - `/wachtwoord-vergeten` – request a password reset e-mail
 - `/profiel` – logged-in users: see name and e-mail, change password
-- `/organisatie` – admins only ("Organisatie" in the header), three tabs: **Gegevens**
+- `/organisatie` – admins only ("Organisatie" in the header), four tabs: **Gegevens**
   (the organisation's name, address and e-mail), **Gebruikers** (`/organisatie/gebruikers`:
-  add, edit and delete users, force a password reset) and **Attest**
-  (`/organisatie/attest`: certificate stamp, signers and preview)
+  add, edit and delete users, force a password reset), **Attest**
+  (`/organisatie/attest`: certificate stamp, signers and preview) and **Extern attest**
+  (`/organisatie/extern-attest`: certificates for an activity someone else organised)
 
 **Users and admins.** Admins (`users.is_admin`) manage the other users. The flag
 cannot be set through the website: the account that existed when the
@@ -203,6 +204,15 @@ layout in `resources/views/attesten/attest.blade.php`.
 signed by everyone with the Gouwcommissaris function on Wie is wie. Without a stamp or a
 Gouwcommissaris, no certificates can
 be made and the overview says why.
+
+**External certificates.** When a group or district organised the activity and the gouw only
+provides the certificates, admins use Organisatie → Extern attest (`/organisatie/extern-attest`):
+activity details (title, optional "georganiseerd door", location, dates, vormingsuren) and a
+list of participants, pasted or as a CSV upload (name and e-mail per line, `;` or `,`, either
+order; an Excel export with a header works). Every line is checked before anything is sent.
+Each participant gets the same certificate mail; the certificate adds "georganiseerd door …".
+**Nothing is stored**: no activity, no participants, no upload, and a failed mail is logged
+without the address. Failed participants are put back in the form so a resend reaches only them.
 
 **Organisation details.** The name, building, address and e-mail of the
 organisation are edited by admins on Organisatie → Gegevens (`/organisatie`) and stored
