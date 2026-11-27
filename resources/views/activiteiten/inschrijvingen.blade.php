@@ -21,9 +21,7 @@
                 $unfinished = $activity->registrations->count() - $confirmed;
                 // Added by an organiser, paying later.
                 $toPay = $activity->registrations->filter(fn ($registration) => $registration->isManual() && $registration->canBeMarkedPaid())->count();
-                // Attendance and certificates (toolbar above the table).
-                $presentCount = $activity->registrations->filter->isPresent()->count();
-                $everyonePresent = $activity->registrations->filter->isConfirmed()->every->isPresent();
+                // Certificates (toolbar above the table).
                 $sentCount = $activity->registrations->whereNotNull('certificate_sent_at')->count();
             @endphp
             <p class="lead">
@@ -64,17 +62,8 @@
                 <p>Nog niemand ingeschreven.</p>
             </div>
         @else
-            <div class="registrations-toolbar">
-                <div class="toolbar-group">
-                    <span class="toolbar-label"><strong><span data-present-count>{{ $presentCount }}</span> van {{ $activity->registrations->count() }}</strong> aanwezig</span>
-                    @unless ($everyonePresent)
-                        <form method="POST" action="{{ route('activiteiten.aanwezigheid.alle', $activity) }}">
-                            @csrf
-                            <button type="submit" class="button button-ghost button-small">Iedereen aanwezig</button>
-                        </form>
-                    @endunless
-                </div>
-                @if ($activity->hasCertificates())
+            @if ($activity->hasCertificates())
+                <div class="registrations-toolbar">
                     <div class="toolbar-group">
                         <span class="toolbar-label">
                             Attesten ({{ $activity->trainingHoursLabel() }} vormingsuren)@if ($sentCount): <strong>{{ $sentCount }}</strong> verstuurd @endif
@@ -90,8 +79,8 @@
                             </form>
                         @endif
                     </div>
-                @endif
-            </div>
+                </div>
+            @endif
 
             {{-- Filtering, sorting and selecting: public/js/registrations.js reveals these (hidden without JS). --}}
             <div class="registrations-filters" data-filters hidden>

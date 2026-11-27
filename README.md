@@ -168,9 +168,9 @@ still have to pay. It counts the price each registration paid; cancelled registr
 are removed, so refunds (and administrative costs kept back) are not in it.
 
 **Attendance.** The registrations overview has an "Aanwezig" checkbox per registrant
-(saved straight away) and an "Iedereen aanwezig" button that ticks every confirmed
-registration; unconfirmed ones (payment not finished) can only be ticked by hand. The
-Excel export has an "Aanwezig" column. Stored as `registrations.present_at`.
+(saved straight away, without reloading). To mark many people at once, select them
+(or "select all") and use Aanwezig in the selection bar. The Excel export has an
+"Aanwezig" column. Stored as `registrations.present_at`.
 
 **Filtering, sorting and selecting.** Above the table: search by name or e-mail
 (accents don't matter), filters for Aanwezig, Betaling and every question (a dropdown for
