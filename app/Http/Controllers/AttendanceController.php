@@ -28,7 +28,8 @@ class AttendanceController extends Controller
         }
         $registration->save();
 
-        return back();
+        // Back to the same row, so ticking a long list doesn't jump to the top every time.
+        return redirect()->to(route('activiteiten.inschrijvingen', $activity).'#inschrijving-'.$registration->id);
     }
 
     /**

@@ -93,7 +93,7 @@
                     </thead>
                     <tbody>
                         @foreach ($activity->registrations as $registration)
-                            <tr @class(['row-unconfirmed' => ! $registration->isConfirmed()])>
+                            <tr id="inschrijving-{{ $registration->id }}" @class(['row-unconfirmed' => ! $registration->isConfirmed()])>
                                 <td class="nowrap">{{ $registration->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="nowrap">{{ $registration->name }}</td>
                                 <td class="nowrap attendance">

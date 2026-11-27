@@ -47,6 +47,17 @@ class AttendanceTest extends TestCase
         $this->assertNotNull($jan->fresh()->present_at);
     }
 
+    public function test_ticking_returns_to_the_same_row(): void
+    {
+        $jan = $this->registrations['Jan'];
+
+        $this->actingAs($this->activity->user)->post($this->url($jan), ['present' => '1'])
+            ->assertRedirect("/activiteiten/{$this->activity->slug}/inschrijvingen#inschrijving-{$jan->id}");
+
+        $this->actingAs($this->activity->user)->get("/activiteiten/{$this->activity->slug}/inschrijvingen")
+            ->assertSee('id="inschrijving-'.$jan->id.'"', false);
+    }
+
     public function test_unticking_clears_attendance(): void
     {
         $jan = $this->registrations['Jan'];

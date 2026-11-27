@@ -161,6 +161,27 @@ class CertificateMailTest extends TestCase
         $this->assertNull($this->registrations['Lien']->fresh()->certificate_sent_at);
     }
 
+    public function test_a_concurrent_send_never_mails_someone_twice(): void
+    {
+        // A second click while this request is still busy: it claims Lien before this request gets to her.
+        $this->app->bind(CertificateRenderer::class, fn () => new class extends CertificateRenderer
+        {
+            public function pdf(Registration $registration): string
+            {
+                if ($registration->name === 'Jan') {
+                    Registration::where('name', 'Lien')->update(['certificate_sent_at' => now()]);
+                }
+
+                return parent::pdf($registration);
+            }
+        });
+
+        $this->send()->assertSessionHas('status', '1 attest verstuurd.');
+
+        Mail::assertSent(CertificateMail::class, 1);
+        Mail::assertNotSent(CertificateMail::class, fn (CertificateMail $mail) => $mail->registration->name === 'Lien');
+    }
+
     public function test_mail_content(): void
     {
         $jan = $this->registrations['Jan'];

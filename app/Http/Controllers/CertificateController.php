@@ -64,19 +64,28 @@ class CertificateController extends Controller
         // Sent straight away (no queue worker in production): give large groups the time they need.
         set_time_limit(max(120, $recipients->count() * 2));
 
+        $sent = 0;
         $failed = [];
         foreach ($recipients as $registration) {
+            // Claim it first: a second click while this batch is still running then skips
+            // everyone this request already has (or is about to) mail.
+            $claimed = Registration::whereKey($registration->id)->whereNull('certificate_sent_at')
+                ->update(['certificate_sent_at' => now()]);
+            if (! $claimed) {
+                continue;
+            }
+
             try {
                 Mail::to($registration->email, $registration->name)
                     ->send(new CertificateMail($registration, $renderer->pdf($registration), $renderer->filename($registration)));
-                $registration->forceFill(['certificate_sent_at' => now()])->save();
+                $sent++;
             } catch (Throwable $e) {
                 report($e);
+                Registration::whereKey($registration->id)->update(['certificate_sent_at' => null]);
                 $failed[] = $registration->name;
             }
         }
 
-        $sent = $recipients->count() - count($failed);
         $redirect = redirect()->route('activiteiten.inschrijvingen', $activity)
             ->with('status', $sent === 1 ? '1 attest verstuurd.' : "{$sent} attesten verstuurd.");
 
