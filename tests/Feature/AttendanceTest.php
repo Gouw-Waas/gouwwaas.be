@@ -58,6 +58,17 @@ class AttendanceTest extends TestCase
             ->assertSee('id="inschrijving-'.$jan->id.'"', false);
     }
 
+    public function test_ticking_in_the_background_answers_with_json(): void
+    {
+        $jan = $this->registrations['Jan'];
+
+        $this->actingAs($this->activity->user)->postJson($this->url($jan), ['present' => '1'])
+            ->assertOk()
+            ->assertExactJson(['present' => true, 'presentCount' => 1]);
+
+        $this->assertTrue($jan->fresh()->isPresent());
+    }
+
     public function test_unticking_clears_attendance(): void
     {
         $jan = $this->registrations['Jan'];

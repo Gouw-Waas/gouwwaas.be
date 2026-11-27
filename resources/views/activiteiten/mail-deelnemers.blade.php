@@ -67,9 +67,13 @@
                                 @endforeach
                             </ul>
                         </details>
+                        <input type="hidden" name="selection" value="1">
                         @foreach ($selection as $registration)
                             <input type="hidden" name="ids[]" value="{{ $registration->id }}">
                         @endforeach
+                        @if ($selection->isEmpty())
+                            <p class="flash flash-error" role="alert">Niemand van de selectie staat nog ingeschreven. Ga terug naar de inschrijvingen en selecteer opnieuw.</p>
+                        @endif
                     @else
                         <p>
                             Naar <strong>{{ $confirmedCount }} {{ $confirmedCount === 1 ? 'deelnemer' : 'deelnemers' }}</strong>,
@@ -93,7 +97,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="button">Versturen</button>
+                    <button type="submit" class="button" @disabled($selection !== null && $selection->isEmpty())>Versturen</button>
                     <a href="{{ route('activiteiten.inschrijvingen', $activity) }}" class="button button-ghost">Annuleren</a>
                 </div>
             </form>

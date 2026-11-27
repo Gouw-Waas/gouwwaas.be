@@ -121,6 +121,12 @@ class ParticipantMailController extends Controller
     {
         $ids = $request->input('ids');
 
-        return is_array($ids) ? array_values(array_map('intval', array_slice($ids, 0, 1000))) : null;
+        if (is_array($ids)) {
+            return array_values(array_map('intval', array_slice($ids, 0, 1000)));
+        }
+
+        // The mail page sends "selection=1" with a selection, so a selection whose people no
+        // longer exist mails nobody instead of falling back to everyone.
+        return $request->boolean('selection') ? [] : null;
     }
 }

@@ -194,5 +194,42 @@
         });
     });
 
+    // ---- Attendance saved in the background -------------------------------------
+    // site.js submits the form when the checkbox changes; here that submit becomes a fetch,
+    // so filters, sorting and the selection survive. On any failure: the normal form post.
+
+    const presentCount = document.querySelector('[data-present-count]');
+
+    tbody.addEventListener('submit', async (event) => {
+        const form = event.target;
+        if (! form.matches('[data-attendance-form]')) return;
+        event.preventDefault();
+
+        const box = form.querySelector('input[type="checkbox"][name="present"]');
+        const row = form.closest('tr[data-row]');
+        const body = new FormData(form); // before disabling: a disabled checkbox isn't sent
+        if (box) box.disabled = true;
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body,
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            if (! response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const result = await response.json();
+            if (box) box.checked = result.present;
+            if (row) row.setAttribute('data-present', result.present ? '1' : '0');
+            if (presentCount) presentCount.textContent = result.presentCount;
+            applyFilters(); // the row may no longer match an Aanwezig filter
+        } catch (error) {
+            form.submit(); // no submit event: the plain post, which reloads the page
+        } finally {
+            if (box) box.disabled = false;
+        }
+    });
+
     applyFilters();
 })();

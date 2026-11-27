@@ -66,7 +66,7 @@
         @else
             <div class="registrations-toolbar">
                 <div class="toolbar-group">
-                    <span class="toolbar-label"><strong>{{ $presentCount }} van {{ $activity->registrations->count() }}</strong> aanwezig</span>
+                    <span class="toolbar-label"><strong><span data-present-count>{{ $presentCount }}</span> van {{ $activity->registrations->count() }}</strong> aanwezig</span>
                     @unless ($everyonePresent)
                         <form method="POST" action="{{ route('activiteiten.aanwezigheid.alle', $activity) }}">
                             @csrf
@@ -183,7 +183,7 @@
                                 <td class="nowrap">{{ $registration->name }}</td>
                                 <td class="nowrap">
                                     <div class="attendance">
-                                    <form class="attendance-form" method="POST" action="{{ route('activiteiten.aanwezigheid', [$activity, $registration->id]) }}">
+                                    <form class="attendance-form" data-attendance-form method="POST" action="{{ route('activiteiten.aanwezigheid', [$activity, $registration->id]) }}">
                                         @csrf
                                         <input type="hidden" name="present" value="0">
                                         <label class="checkbox">

@@ -152,4 +152,18 @@ class ParticipantMailTest extends TestCase
             ->post($url, ['subject' => 'Hoi', 'message' => 'Test', 'send_copy' => '0', 'ids' => [$stranger->id]])
             ->assertSessionHasErrors(['message' => 'Er is niemand om te mailen.']);
     }
+
+    public function test_a_selection_that_no_longer_exists_mails_nobody(): void
+    {
+        // Selected on the overview, then cancelled in another tab before sending.
+        $url = "/activiteiten/{$this->activity->slug}/deelnemers-mailen";
+        $html = $this->actingAs($this->activity->user)->get($url.'?ids[]=999999')->assertOk()->getContent();
+        $this->assertStringContainsString('name="selection" value="1"', $html);
+
+        $this->actingAs($this->activity->user)
+            ->post($url, ['subject' => 'Hoi', 'message' => 'Test', 'send_copy' => '0', 'selection' => '1'])
+            ->assertSessionHasErrors(['message' => 'Er is niemand om te mailen.']);
+
+        Mail::assertNothingSent();
+    }
 }

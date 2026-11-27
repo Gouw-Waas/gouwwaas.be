@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activity;
 use App\Models\Registration;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Gate;
  */
 class AttendanceController extends Controller
 {
-    public function update(Request $request, Activity $activity, Registration $registration): RedirectResponse
+    public function update(Request $request, Activity $activity, Registration $registration): RedirectResponse|JsonResponse
     {
         Gate::authorize('viewRegistrations', $activity);
 
@@ -28,7 +29,15 @@ class AttendanceController extends Controller
         }
         $registration->save();
 
-        // Back to the same row, so ticking a long list doesn't jump to the top every time.
+        // Saved in the background by public/js/registrations.js, so filters and selection stay.
+        if ($request->expectsJson()) {
+            return response()->json([
+                'present' => $registration->isPresent(),
+                'presentCount' => $activity->registrations()->whereNotNull('present_at')->count(),
+            ]);
+        }
+
+        // Without JavaScript: back to the same row, so ticking a long list doesn't jump to the top every time.
         return redirect()->to(route('activiteiten.inschrijvingen', $activity).'#inschrijving-'.$registration->id);
     }
 
