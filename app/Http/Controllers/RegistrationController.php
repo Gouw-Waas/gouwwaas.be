@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activity;
+use App\Models\ActivityField;
 use App\Models\Registration;
 use App\Payments\CancellationException;
 use App\Payments\PaymentException;
@@ -179,21 +180,23 @@ class RegistrationController extends Controller
     private function columnFilters(Activity $activity, Collection $columns): array
     {
         $fields = $activity->fields->keyBy('id');
+        $filters = [];
 
-        return $columns->mapWithKeys(function (array $column) use ($fields) {
+        foreach ($columns as $column) {
+            // Removed fields have no field anymore: filtered as text.
             $field = $fields->get($column['id']);
+            $type = $field instanceof ActivityField ? $field->type : null;
 
-            return [$column['id'] => [
-                'options' => match ($field?->type) {
-                    'select' => array_values($field->options ?? []),
+            $filters[$column['id']] = [
+                'options' => match ($type) {
+                    'select' => array_map('strval', (array) $field->options),
                     'checkbox' => ['Ja', 'Nee'],
                     default => null,
                 },
-                'sort' => match ($field?->type) {
-                    'number' => 'number',
-                    default => 'text',
-                },
-            ]];
-        })->all();
+                'sort' => $type === 'number' ? 'number' : 'text',
+            ];
+        }
+
+        return $filters;
     }
 }
