@@ -72,6 +72,17 @@ class RevenueTest extends TestCase
         $this->overview($activity)->assertOk()->assertDontSee('Financieel overzicht');
     }
 
+    public function test_no_summary_or_payment_column_when_nobody_paid_anything(): void
+    {
+        // Registered while the activity was still free; it costs money now.
+        $activity = Activity::factory()->create(['price_cents' => 600]);
+        $this->register($activity, 'Jan', ['amount_cents' => 0]);
+
+        $this->overview($activity)->assertOk()
+            ->assertDontSee('Financieel overzicht')
+            ->assertDontSee('<th scope="col">Betaling</th>', false);
+    }
+
     public function test_no_summary_without_registrations(): void
     {
         $activity = Activity::factory()->create(['price_cents' => 1000]);

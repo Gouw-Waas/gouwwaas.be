@@ -315,6 +315,15 @@ class Activity extends Model
         return $this->hasCertificates() && ! $this->starts_at->isFuture() && $this->certificateRecipients()->isNotEmpty();
     }
 
+    /**
+     * Whether any registration costs money (not the current price: someone may have
+     * registered while the activity was still free). Shows the payment column and summary.
+     */
+    public function involvesMoney(): bool
+    {
+        return $this->registrations->contains(fn (Registration $registration) => ! $registration->isFree());
+    }
+
     public function isRegistrationOpen(): bool
     {
         return now()->lte($this->registration_deadline);

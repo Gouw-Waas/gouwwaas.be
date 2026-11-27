@@ -101,9 +101,9 @@
                             <th scope="col">Naam</th>
                             <th scope="col">Aanwezig</th>
                             <th scope="col">E-mailadres</th>
-                            @unless ($activity->isFree() && $activity->registrations->every->isFree())
+                            @if ($activity->involvesMoney())
                                 <th scope="col">Betaling</th>
-                            @endunless
+                            @endif
                             @foreach ($columns as $column)
                                 <th scope="col">{{ $column['label'] }}</th>
                             @endforeach
@@ -132,7 +132,7 @@
                                     </div>
                                 </td>
                                 <td class="nowrap"><a href="mailto:{{ $registration->email }}">{{ $registration->email }}</a></td>
-                                @unless ($activity->isFree() && $activity->registrations->every->isFree())
+                                @if ($activity->involvesMoney())
                                     <td class="nowrap">
                                         <span @class(['badge', 'badge-open' => ! $registration->isConfirmed()])>{{ $registration->paymentLabel() }}</span>
                                         @unless ($registration->isFree())
@@ -142,7 +142,7 @@
                                             @include('activiteiten._mark-paid', ['registration' => $registration])
                                         @endif
                                     </td>
-                                @endunless
+                                @endif
                                 @foreach ($columns as $column)
                                     <td>{{ $registration->answerFor($column['id']) }}</td>
                                 @endforeach
@@ -160,7 +160,7 @@
                 </table>
             </div>
 
-            @unless ($activity->isFree() && $activity->registrations->every->isFree())
+            @if ($activity->involvesMoney())
                 @php($revenue = $activity->revenue())
                 @php($count = fn (int $n) => $n === 1 ? '1 inschrijving' : "{$n} inschrijvingen")
                 <section class="card revenue" aria-labelledby="revenue-title">
@@ -192,7 +192,7 @@
                         tellen niet mee (ook niet ingehouden administratiekosten).
                     </p>
                 </section>
-            @endunless
+            @endif
         @endif
     </section>
 
