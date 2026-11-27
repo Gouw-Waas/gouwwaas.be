@@ -11,7 +11,6 @@
                 <div class="header-actions">
                     <a href="{{ route('activiteiten.inschrijvingen.create', $activity) }}" class="button">Inschrijving toevoegen</a>
                     @if ($activity->registrations->isNotEmpty())
-                        <a href="{{ route('activiteiten.mail', $activity) }}" class="button button-ghost">Deelnemers mailen</a>
                         <a href="{{ route('activiteiten.inschrijvingen.export', $activity) }}" class="button button-ghost">Download (Excel)</a>
                     @endif
                 </div>

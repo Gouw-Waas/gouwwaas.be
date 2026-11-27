@@ -79,28 +79,16 @@ class AttendanceTest extends TestCase
         $this->assertNull($jan->fresh()->present_at);
     }
 
-    public function test_everyone_present_only_marks_confirmed_registrations(): void
+    public function test_bulk_attendance_needs_a_selection(): void
     {
+        // "Iedereen aanwezig" is gone: select all, then Aanwezig in the selection bar.
         $this->actingAs($this->activity->user)
-            ->post("/activiteiten/{$this->activity->slug}/aanwezig")
-            ->assertRedirect()
-            ->assertSessionHas('status', '2 deelnemers aangeduid als aanwezig.');
+            ->post("/activiteiten/{$this->activity->slug}/aanwezig", ['present' => '1'])
+            ->assertSessionHasErrors('ids');
 
-        $this->assertTrue($this->registrations['Jan']->fresh()->isPresent());
-        $this->assertTrue($this->registrations['Piet']->fresh()->isPresent());
-        $this->assertFalse($this->registrations['Joris']->fresh()->isPresent());
-    }
-
-    public function test_everyone_present_keeps_existing_times(): void
-    {
-        $yesterday = now()->subDay()->startOfSecond();
-        $this->registrations['Jan']->forceFill(['present_at' => $yesterday])->save();
-
-        $this->actingAs($this->activity->user)
-            ->post("/activiteiten/{$this->activity->slug}/aanwezig")
-            ->assertSessionHas('status', '1 deelnemer aangeduid als aanwezig.');
-
-        $this->assertTrue($this->registrations['Jan']->fresh()->present_at->equalTo($yesterday));
+        foreach ($this->registrations as $registration) {
+            $this->assertFalse($registration->fresh()->isPresent());
+        }
     }
 
     public function test_unconfirmed_registration_can_be_ticked_by_hand(): void

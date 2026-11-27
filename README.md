@@ -203,9 +203,9 @@ privacy page and as the location placeholder); the Karree page should use it too
 both branches are on `main`. Without a stamp or a Gouwcommissaris, no certificates can
 be made and the overview says why.
 
-**Mailing participants.** "Deelnemers mailen" in the overview sends a message to every
-participant (optionally also to those who never finished paying), one e-mail per
-address so nobody sees the others' addresses. The activity's date, place and link are
+**Mailing participants.** Select people in the overview (or "select all") and choose
+Mailen in the selection bar: the message goes to exactly those people (paid or not), one
+e-mail per address so nobody sees the others' addresses. The activity's date, place and link are
 added below the message, replies go to the organiser who sent it, and they can get a
 copy. Sent straight away, like all mail (no queue worker).
 
