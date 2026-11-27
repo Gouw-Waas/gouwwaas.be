@@ -22,8 +22,8 @@ return [
     ],
 
     /*
-    | The logo on participation certificates: relative to public/, a PNG (the PDF library
-    | can't read webp).
+    | The default logo on participation certificates, until an admin uploads one on
+    | /organisatie: relative to public/, a PNG (the PDF library can't read webp).
     */
     'logo' => 'images/logo-600.png',
 

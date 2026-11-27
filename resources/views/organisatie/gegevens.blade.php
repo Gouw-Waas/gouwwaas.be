@@ -12,7 +12,7 @@
     </section>
 
     <section class="container section">
-        <form method="POST" action="{{ route('organisatie.update') }}" class="card form-card form-card-left form">
+        <form method="POST" action="{{ route('organisatie.update') }}" class="card form-card form-card-left form" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -37,6 +37,26 @@
                     @enderror
                 </div>
             @endforeach
+
+            <div class="field">
+                <label for="logo">Logo op de attesten</label>
+                @if ($logo)
+                    <div class="image-current">
+                        <img src="{{ $logo }}" alt="Huidig logo" class="logo-preview">
+                        @if ($logoUploaded)
+                            <label class="checkbox">
+                                <input type="checkbox" name="remove_logo" value="1" @checked(old('remove_logo'))>
+                                Standaardlogo terugzetten
+                            </label>
+                        @endif
+                    </div>
+                @endif
+                <input id="logo" type="file" name="logo" accept="image/png" aria-describedby="logo-hint @error('logo') logo-error @enderror" @error('logo') aria-invalid="true" @enderror>
+                <p class="hint" id="logo-hint">PNG, maximaal 2 MB, liefst met een doorzichtige achtergrond. Laat leeg om het huidige logo te houden.</p>
+                @error('logo')
+                    <p class="error" id="logo-error">{{ $message }}</p>
+                @enderror
+            </div>
 
             <button type="submit" class="button">Opslaan</button>
         </form>

@@ -209,8 +209,10 @@ organisation are edited by admins on Organisatie → Gegevens (`/organisatie`) a
 in the one-row `organisation` table (`App\Models\Organisation::current()`). They are
 used on certificates, as reply-to address of certificate mails, in the footer, on the
 privacy page and as the location placeholder. Until an admin saves that page, the
-defaults from `organisation` in `config/gouw.php` are used. The certificate logo is
-`logo` in that config file.
+defaults from `organisation` in `config/gouw.php` are used. The logo on certificates is
+uploaded on the same tab (PNG, private disk: `storage/app/private/organisatie/logo.png`);
+without an upload it's `logo` in that config file. The website's own logos (header,
+footer, link previews) are the optimised files in `public/images/`.
 
 **Mailing participants.** "Deelnemers mailen" in the overview sends a message to every
 participant (optionally also to those who never finished paying), one e-mail per

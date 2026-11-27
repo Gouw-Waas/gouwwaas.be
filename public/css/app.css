@@ -2054,7 +2054,8 @@ select:focus {
 /* Organisatie (admins): tabs under the page title, like the main menu tabs */
 .subtabs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 16px; }
 .section-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-bottom: 16px; }
-.stamp-preview { max-width: 180px; height: auto; }
+.stamp-preview,
+.logo-preview { max-width: 180px; height: auto; }
 
 /* Registrations overview: filters, sorting, selection (public/js/registrations.js) */
 .registrations-filters {

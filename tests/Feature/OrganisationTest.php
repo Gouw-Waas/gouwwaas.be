@@ -5,7 +5,10 @@ namespace Tests\Feature;
 use App\Certificates\CertificateRenderer;
 use App\Models\Organisation;
 use App\Models\User;
+use App\Support\OrganisationLogo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\Feature\Concerns\SetsUpCertificates;
 use Tests\TestCase;
 
@@ -14,8 +17,8 @@ class OrganisationTest extends TestCase
     use RefreshDatabase, SetsUpCertificates;
 
     /**
-     * @param  array<string, string>  $overrides
-     * @return array<string, string>
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
      */
     private function details(array $overrides = []): array
     {
@@ -69,6 +72,32 @@ class OrganisationTest extends TestCase
         $html = $renderer->html($renderer->sampleRegistration());
         $this->assertStringContainsString('Gouw Test – Scouts en Gidsen Vlaanderen', $html);
         $this->assertStringContainsString('Teststraat 1', $html);
+    }
+
+    public function test_logo_upload_and_reset_to_default(): void
+    {
+        Storage::fake(OrganisationLogo::DISK);
+        $admin = User::factory()->admin()->create();
+        $default = OrganisationLogo::dataUri();
+        $this->assertNotNull($default);
+
+        $png = UploadedFile::fake()->createWithContent('logo.png', base64_decode(self::PNG));
+        $this->actingAs($admin)->put('/organisatie', $this->details(['logo' => $png]))->assertSessionHasNoErrors();
+        $this->assertTrue(OrganisationLogo::isUploaded());
+        $this->assertSame('data:image/png;base64,'.self::PNG, OrganisationLogo::dataUri());
+        $this->actingAs($admin)->get('/organisatie')->assertSee('Standaardlogo terugzetten');
+
+        // Saving without a file keeps the uploaded logo.
+        $this->actingAs($admin)->put('/organisatie', $this->details());
+        $this->assertTrue(OrganisationLogo::isUploaded());
+
+        $this->actingAs($admin)->put('/organisatie', $this->details(['remove_logo' => '1']));
+        $this->assertFalse(OrganisationLogo::isUploaded());
+        $this->assertSame($default, OrganisationLogo::dataUri());
+
+        $this->actingAs($admin)
+            ->put('/organisatie', $this->details(['logo' => UploadedFile::fake()->create('logo.pdf', 10, 'application/pdf')]))
+            ->assertSessionHasErrors(['logo' => 'Laad een PNG-afbeelding op van maximaal 2 MB.']);
     }
 
     public function test_validation(): void

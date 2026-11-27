@@ -7,6 +7,7 @@ use App\Models\Organisation;
 use App\Models\Registration;
 use App\Models\Role;
 use App\Models\RoleMember;
+use App\Support\OrganisationLogo;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Support\Carbon;
@@ -104,7 +105,6 @@ class CertificateRenderer
     public function html(Registration $registration): string
     {
         $activity = $registration->activity;
-        $logo = public_path(config('gouw.logo'));
 
         return view('attesten.attest', [
             'activity' => $activity,
@@ -112,7 +112,7 @@ class CertificateRenderer
             'organisation' => Organisation::current(),
             'signers' => $this->signers(),
             'stamp' => Stamp::dataUri(),
-            'logo' => is_file($logo) ? 'data:image/png;base64,'.base64_encode((string) file_get_contents($logo)) : null,
+            'logo' => OrganisationLogo::dataUri(),
             'dateText' => $this->dateText($activity),
             'issuedOn' => $this->longDate(now()),
         ])->render();
