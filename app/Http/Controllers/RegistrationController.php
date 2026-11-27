@@ -57,6 +57,8 @@ class RegistrationController extends Controller
         return view('activiteiten.inschrijvingen', [
             'activity' => $activity,
             'columns' => $activity->answerColumns(),
+            // How many certificates "Attesten versturen" would send; 0 hides the button.
+            'certificateCount' => $activity->canSendCertificates() ? $activity->certificateRecipients()->count() : 0,
         ]);
     }
 

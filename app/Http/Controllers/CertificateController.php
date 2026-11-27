@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Certificates\CertificateRenderer;
 use App\Certificates\CertificateUnavailable;
+use App\Mail\CertificateMail;
 use App\Models\Activity;
 use App\Models\Registration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 /**
  * Participation certificates (attesten) for activities with vormingsuren, for registrants
@@ -32,5 +35,55 @@ class CertificateController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$renderer->filename($registration).'"',
         ]);
+    }
+
+    /**
+     * E-mail every present, confirmed registrant who hasn't had their certificate yet: one mail
+     * per registration (siblings sharing an address each get their own).
+     */
+    public function send(Activity $activity, CertificateRenderer $renderer): RedirectResponse
+    {
+        Gate::authorize('viewRegistrations', $activity);
+
+        try {
+            $renderer->ensureAvailable($activity);
+        } catch (CertificateUnavailable $e) {
+            return back()->withErrors(['certificate' => $e->getMessage()]);
+        }
+
+        if ($activity->starts_at->isFuture()) {
+            return back()->withErrors(['certificate' => 'Attesten kun je pas versturen vanaf de start van de activiteit.']);
+        }
+
+        $recipients = $activity->certificateRecipients();
+
+        if ($recipients->isEmpty()) {
+            return back()->withErrors(['certificate' => 'Er zijn geen nieuwe attesten om te versturen.']);
+        }
+
+        // Sent straight away (no queue worker in production): give large groups the time they need.
+        set_time_limit(max(120, $recipients->count() * 2));
+
+        $failed = [];
+        foreach ($recipients as $registration) {
+            try {
+                Mail::to($registration->email, $registration->name)
+                    ->send(new CertificateMail($registration, $renderer->pdf($registration), $renderer->filename($registration)));
+                $registration->forceFill(['certificate_sent_at' => now()])->save();
+            } catch (Throwable $e) {
+                report($e);
+                $failed[] = $registration->name;
+            }
+        }
+
+        $sent = $recipients->count() - count($failed);
+        $redirect = redirect()->route('activiteiten.inschrijvingen', $activity)
+            ->with('status', $sent === 1 ? '1 attest verstuurd.' : "{$sent} attesten verstuurd.");
+
+        if ($failed) {
+            $redirect->withErrors(['certificate' => 'Niet verstuurd naar: '.implode(', ', $failed).'. Probeer later opnieuw: wie al een attest kreeg, krijgt het niet nog eens.']);
+        }
+
+        return $redirect;
     }
 }

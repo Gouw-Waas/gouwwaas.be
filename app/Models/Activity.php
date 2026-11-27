@@ -291,6 +291,30 @@ class Activity extends Model
         return fmod($hours, 1.0) === 0.0 ? (string) (int) $hours : number_format($hours, 1, ',', '');
     }
 
+    /**
+     * Who gets a certificate when the organiser clicks "Attesten versturen": present,
+     * confirmed, and not sent yet. No deduplication by e-mail address: every registration
+     * is its own participant.
+     *
+     * @return Collection<int, Registration>
+     */
+    public function certificateRecipients(): Collection
+    {
+        return $this->registrations
+            ->filter(fn (Registration $registration) => $registration->isPresent()
+                && $registration->isConfirmed()
+                && $registration->certificate_sent_at === null)
+            ->values();
+    }
+
+    /**
+     * The "Attesten versturen" button: vormingsuren, started, and someone to send to.
+     */
+    public function canSendCertificates(): bool
+    {
+        return $this->hasCertificates() && ! $this->starts_at->isFuture() && $this->certificateRecipients()->isNotEmpty();
+    }
+
     public function isRegistrationOpen(): bool
     {
         return now()->lte($this->registration_deadline);

@@ -15,6 +15,16 @@
                             @csrf
                             <button type="submit" class="button button-ghost">Iedereen aanwezig</button>
                         </form>
+                        @if ($certificateCount)
+                            <form method="POST" action="{{ route('activiteiten.attesten.versturen', $activity) }}"
+                                  data-confirm="{{ $certificateCount === 1 ? '1 attest' : $certificateCount.' attesten' }} versturen?"
+                                  data-confirm-text="Elke aanwezige deelnemer krijgt het eigen attest per e-mail. Wie al een attest kreeg, krijgt het niet nog eens."
+                                  data-confirm-button="Versturen"
+                                  data-confirm-tone="neutral">
+                                @csrf
+                                <button type="submit" class="button">Attesten versturen ({{ $certificateCount }})</button>
+                            </form>
+                        @endif
                         <a href="{{ route('activiteiten.mail', $activity) }}" class="button button-ghost">Deelnemers mailen</a>
                         <a href="{{ route('activiteiten.inschrijvingen.export', $activity) }}" class="button button-ghost">Download (Excel)</a>
                     @endif
@@ -96,6 +106,9 @@
                                         </label>
                                         <noscript><button type="submit" class="button button-ghost">Opslaan</button></noscript>
                                     </form>
+                                    @if ($registration->certificate_sent_at)
+                                        <span class="muted small" title="{{ $registration->certificate_sent_at->format('d/m/Y H:i') }}">attest verstuurd</span>
+                                    @endif
                                 </td>
                                 <td class="nowrap"><a href="mailto:{{ $registration->email }}">{{ $registration->email }}</a></td>
                                 @unless ($activity->isFree() && $activity->registrations->every->isFree())

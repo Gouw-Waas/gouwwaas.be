@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $paid_at
  * @property Carbon|null $confirmation_sent_at
  * @property Carbon|null $present_at
+ * @property Carbon|null $certificate_sent_at
  */
 #[Fillable(['name', 'email', 'answers', 'amount_cents'])]
 class Registration extends Model
@@ -35,6 +36,7 @@ class Registration extends Model
             'paid_manually' => 'boolean',
             'confirmation_sent_at' => 'datetime',
             'present_at' => 'datetime',
+            'certificate_sent_at' => 'datetime',
         ];
     }
 

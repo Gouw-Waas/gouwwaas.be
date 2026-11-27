@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/activiteiten/{activity}/inschrijvingen/{registration:id}/attest.pdf', [CertificateController::class, 'download'])
         ->scopeBindings()
         ->name('activiteiten.attest');
+    Route::post('/activiteiten/{activity}/attesten', [CertificateController::class, 'send'])->name('activiteiten.attesten.versturen');
     Route::delete('/activiteiten/{activity}/inschrijvingen/{registration:id}', [RegistrationController::class, 'destroy'])
         ->scopeBindings()
         ->name('activiteiten.inschrijvingen.destroy');
