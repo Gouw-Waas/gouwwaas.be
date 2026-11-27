@@ -172,6 +172,17 @@ are removed, so refunds (and administrative costs kept back) are not in it.
 registration; unconfirmed ones (payment not finished) can only be ticked by hand. The
 Excel export has an "Aanwezig" column. Stored as `registrations.present_at`.
 
+**Filtering, sorting and selecting.** Above the table: search by name or e-mail
+(accents don't matter), filters for Aanwezig, Betaling and every question (a dropdown for
+choice fields and checkboxes, "bevat" text for the rest; more than 3 questions sit behind
+"Meer filters"), and sortable column headers. A checkbox per row (and "select all" for the
+rows shown) opens a bar with Mailen (the mail page addressed to just those people),
+Aanwezig, Niet aanwezig and Attesten versturen for the selection. Rows a filter hides are
+deselected. The server only acts on ids of this activity and still checks who can get a
+certificate. Download (Excel) is always everyone. All of it is in `public/js/registrations.js`;
+without JavaScript the page works as before. The Betaling column and the financial summary
+only show when some registration involves money (not the activity's current price).
+
 **Participation certificates (attesten).** An activity with *vormingsuren* (optional
 field on the activity form, whole or half hours) gives attendees a one-page PDF
 certificate: organisation, activity, dates, hours, the participant's name, the
