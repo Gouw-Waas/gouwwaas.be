@@ -116,9 +116,9 @@ class RegistrationTest extends TestCase
         $content = $response->streamedContent();
         $rows = $this->readXlsx($content);
 
-        $this->assertSame(['Ingeschreven op', 'Naam', 'E-mailadres', 'Betaling', 'Bedrag', 'Groep', 'Tak', 'Akkoord met de afspraken', 'Aantal personen'], $rows[0]);
+        $this->assertSame(['Ingeschreven op', 'Naam', 'E-mailadres', 'Betaling', 'Bedrag', 'Aanwezig', 'Groep', 'Tak', 'Akkoord met de afspraken', 'Aantal personen'], $rows[0]);
         $this->assertInstanceOf(\DateTimeInterface::class, $rows[1][0]); // a real date cell, sortable in Excel
-        $this->assertSame(['=HYPERLINK("http://evil")', 'jan@example.com', 'Gratis', '', 'Sint-Jozef', 'Welpen', 'Ja'], array_slice($rows[1], 1, 7));
+        $this->assertSame(['=HYPERLINK("http://evil")', 'jan@example.com', 'Gratis', '', '', 'Sint-Jozef', 'Welpen', 'Ja'], array_slice($rows[1], 1, 8));
 
         // Stored as text, never as a formula.
         $this->assertStringNotContainsString('<f>', $this->sheetXml($content));

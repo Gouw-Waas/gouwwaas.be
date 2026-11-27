@@ -11,6 +11,10 @@
                 <div class="header-actions">
                     <a href="{{ route('activiteiten.inschrijvingen.create', $activity) }}" class="button">Inschrijving toevoegen</a>
                     @if ($activity->registrations->isNotEmpty())
+                        <form method="POST" action="{{ route('activiteiten.aanwezigheid.alle', $activity) }}">
+                            @csrf
+                            <button type="submit" class="button button-ghost">Iedereen aanwezig</button>
+                        </form>
                         <a href="{{ route('activiteiten.mail', $activity) }}" class="button button-ghost">Deelnemers mailen</a>
                         <a href="{{ route('activiteiten.inschrijvingen.export', $activity) }}" class="button button-ghost">Download (Excel)</a>
                     @endif
@@ -63,6 +67,7 @@
                         <tr>
                             <th scope="col">Ingeschreven op</th>
                             <th scope="col">Naam</th>
+                            <th scope="col">Aanwezig</th>
                             <th scope="col">E-mailadres</th>
                             @unless ($activity->isFree() && $activity->registrations->every->isFree())
                                 <th scope="col">Betaling</th>
@@ -78,6 +83,17 @@
                             <tr @class(['row-unconfirmed' => ! $registration->isConfirmed()])>
                                 <td class="nowrap">{{ $registration->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="nowrap">{{ $registration->name }}</td>
+                                <td class="nowrap attendance">
+                                    <form method="POST" action="{{ route('activiteiten.aanwezigheid', [$activity, $registration->id]) }}">
+                                        @csrf
+                                        <input type="hidden" name="present" value="0">
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="present" value="1" @checked($registration->isPresent()) data-autosubmit>
+                                            <span class="visually-hidden">{{ $registration->name }} aanwezig</span>
+                                        </label>
+                                        <noscript><button type="submit" class="button button-ghost">Opslaan</button></noscript>
+                                    </form>
+                                </td>
                                 <td class="nowrap"><a href="mailto:{{ $registration->email }}">{{ $registration->email }}</a></td>
                                 @unless ($activity->isFree() && $activity->registrations->every->isFree())
                                     <td class="nowrap">

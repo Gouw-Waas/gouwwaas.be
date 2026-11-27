@@ -68,6 +68,7 @@
                     <li>Je <strong>naam</strong> en <strong>e-mailadres</strong>.</li>
                     <li>Je <strong>antwoorden</strong> op de vragen die de organisator bij die activiteit stelt, bijvoorbeeld je groep, tak of dieetwensen.</li>
                     <li>Voor betalende activiteiten: het <strong>bedrag</strong> en de <strong>status van je betaling</strong> (betaald, mislukt, terugbetaald).</li>
+                    <li>Of je <strong>aanwezig</strong> was: organisatoren kunnen aanduiden wie aanwezig was. Dat gebruiken we om deelnameattesten te maken.</li>
                 </ul>
                 <p>
                     Je bankrekening- of kaartgegevens geef je rechtstreeks aan onze betaalpartner Mollie. Die gegevens komen

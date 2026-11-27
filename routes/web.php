@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\CheckoutController;
@@ -53,6 +54,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/activiteiten/{activity}/inschrijvingen/{registration:id}/betaald', [ManualRegistrationController::class, 'markPaid'])
         ->scopeBindings()
         ->name('activiteiten.inschrijvingen.paid');
+    // Attendance (who was there), on the registrations overview.
+    Route::post('/activiteiten/{activity}/inschrijvingen/{registration:id}/aanwezig', [AttendanceController::class, 'update'])
+        ->scopeBindings()
+        ->name('activiteiten.aanwezigheid');
+    Route::post('/activiteiten/{activity}/aanwezig', [AttendanceController::class, 'markAll'])->name('activiteiten.aanwezigheid.alle');
     Route::delete('/activiteiten/{activity}/inschrijvingen/{registration:id}', [RegistrationController::class, 'destroy'])
         ->scopeBindings()
         ->name('activiteiten.inschrijvingen.destroy');

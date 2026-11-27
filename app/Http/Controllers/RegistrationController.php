@@ -73,15 +73,16 @@ class RegistrationController extends Controller
         $filename = "inschrijvingen-{$activity->slug}.xlsx";
 
         return response()->streamDownload(function () use ($activity, $columns) {
-            $headers = ['Ingeschreven op', 'Naam', 'E-mailadres', 'Betaling', 'Bedrag', ...$columns->pluck('label')];
+            $headers = ['Ingeschreven op', 'Naam', 'E-mailadres', 'Betaling', 'Bedrag', 'Aanwezig', ...$columns->pluck('label')];
 
             $options = new Options;
             $options->setColumnWidth(18, 1);
             $options->setColumnWidth(24, 2);
             $options->setColumnWidth(30, 3);
             $options->setColumnWidth(14, 4, 5);
+            $options->setColumnWidth(10, 6);
             if ($columns->isNotEmpty()) {
-                $options->setColumnWidthForRange(22, 6, count($headers));
+                $options->setColumnWidthForRange(22, 7, count($headers));
             }
 
             $writer = new Writer($options);
@@ -107,6 +108,7 @@ class RegistrationController extends Controller
                     $text($registration->email),
                     $text($registration->paymentLabel()),
                     $registration->isFree() ? $text('') : new NumericCell($registration->amount_cents / 100, $euro),
+                    $text($registration->isPresent() ? 'Ja' : ''),
                     ...$columns->map(fn (array $column) => $text($registration->answerFor($column['id'])))->all(),
                 ]));
             }
