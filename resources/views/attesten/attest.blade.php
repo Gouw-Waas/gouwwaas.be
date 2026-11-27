@@ -47,7 +47,7 @@
     <div class="declaration">
         <p>
             {{ $organisation->name }} verklaart dat <strong>{{ $registration->name }}</strong> heeft deelgenomen aan
-            <strong>{{ $activity->title }}</strong> te {{ $activity->location }}, {{ $dateText }}.
+            <strong>{{ $activity->title }}</strong>@if (filled($organiser ?? null)), georganiseerd door {{ $organiser }},@endif te {{ $activity->location }}, {{ $dateText }}.
         </p>
         <p>Deze activiteit is goed voor <strong>{{ $activity->trainingHoursLabel() }} vormingsuren</strong>.</p>
     </div>

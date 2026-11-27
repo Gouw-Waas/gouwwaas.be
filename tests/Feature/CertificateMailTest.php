@@ -143,13 +143,13 @@ class CertificateMailTest extends TestCase
     {
         $this->app->bind(CertificateRenderer::class, fn () => new class extends CertificateRenderer
         {
-            public function pdf(Registration $registration): string
+            public function pdf(Registration $registration, ?string $organiser = null): string
             {
                 if ($registration->name === 'Lien') {
                     throw new RuntimeException('Mail server says no');
                 }
 
-                return parent::pdf($registration);
+                return parent::pdf($registration, $organiser);
             }
         });
 
@@ -166,13 +166,13 @@ class CertificateMailTest extends TestCase
         // A second click while this request is still busy: it claims Lien before this request gets to her.
         $this->app->bind(CertificateRenderer::class, fn () => new class extends CertificateRenderer
         {
-            public function pdf(Registration $registration): string
+            public function pdf(Registration $registration, ?string $organiser = null): string
             {
                 if ($registration->name === 'Jan') {
                     Registration::where('name', 'Lien')->update(['certificate_sent_at' => now()]);
                 }
 
-                return parent::pdf($registration);
+                return parent::pdf($registration, $organiser);
             }
         });
 

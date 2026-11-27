@@ -63,6 +63,15 @@ class CertificateTest extends TestCase
         $this->assertLessThan(strpos($html, 'Bert Claes'), strpos($html, 'An Peeters'));
     }
 
+    public function test_organiser_line_only_when_given(): void
+    {
+        $this->assertStringNotContainsString('georganiseerd door', $this->renderer()->html($this->zoe));
+        $this->assertStringContainsString(
+            'georganiseerd door Scouts Sint-Niklaas, te Gouwhuis Karree',
+            preg_replace('/\s+/', ' ', strip_tags($this->renderer()->html($this->zoe, 'Scouts Sint-Niklaas'))),
+        );
+    }
+
     public function test_single_day_reads_op(): void
     {
         $this->activity->update(['ends_at' => Carbon::parse('2026-12-12 17:00')]);
