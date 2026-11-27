@@ -9,8 +9,8 @@
 return [
 
     /*
-    | The organisation: printed on participation certificates (attesten) and shown on the
-    | privacy page. logo: relative to public/, a PNG (the PDF library can't read webp).
+    | The organisation's details as they were before admins could edit them on /organisatie
+    | (App\Models\Organisation): used until an admin saves that page the first time.
     */
     'organisation' => [
         'name' => 'Gouw Waas',
@@ -19,8 +19,13 @@ return [
         'street' => 'Apostelstraat 5',
         'city' => '9100 Sint-Niklaas',
         'email' => 'gouwbureau@gouwwaas.be',
-        'logo' => 'images/logo-600.png',
     ],
+
+    /*
+    | The logo on participation certificates: relative to public/, a PNG (the PDF library
+    | can't read webp).
+    */
+    'logo' => 'images/logo-600.png',
 
     /*
     | The three fixed functions of the gouwbureau: key => [title, default description].

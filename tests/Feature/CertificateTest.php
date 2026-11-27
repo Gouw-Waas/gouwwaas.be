@@ -112,7 +112,7 @@ class CertificateTest extends TestCase
         Stamp::delete();
         $this->actingAs($organiser)->from('/vorige')->get($this->url($this->zoe))
             ->assertRedirect('/vorige')
-            ->assertSessionHasErrors(['certificate' => 'Er is nog geen stempel opgeladen. Een beheerder kan dat doen via Beheer → Attest.']);
+            ->assertSessionHasErrors(['certificate' => 'Er is nog geen stempel opgeladen. Een beheerder kan dat doen via Organisatie → Attest.']);
 
         Storage::disk(Stamp::DISK)->put(Stamp::PATH, base64_decode(self::PNG));
         $this->commissaris->members()->get()->each->delete();

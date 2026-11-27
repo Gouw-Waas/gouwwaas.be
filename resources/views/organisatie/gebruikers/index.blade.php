@@ -2,15 +2,20 @@
 
 @section('title', 'Gebruikers')
 
+{{-- Organisatie → Gebruikers (admins). --}}
 @section('content')
     <section class="page-header">
-        <div class="container page-header-row">
-            <h1>Gebruikers</h1>
-            <a href="{{ route('gebruikers.create') }}" class="button">Gebruiker toevoegen</a>
+        <div class="container">
+            <h1>Organisatie</h1>
         </div>
+        @include('organisatie._tabs')
     </section>
 
     <section class="container section">
+        <div class="section-actions">
+            <a href="{{ route('gebruikers.create') }}" class="button">Gebruiker toevoegen</a>
+        </div>
+
         @error('user')
             <p class="flash flash-error" role="alert">{{ $message }}</p>
         @enderror

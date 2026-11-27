@@ -83,7 +83,7 @@
 
                 <div class="field">
                     <label for="location">Locatie</label>
-                    <input id="location" type="text" name="location" value="{{ old('location', $activity->location) }}" required maxlength="255" placeholder="bv. {{ config('gouw.organisation.building') }}, {{ config('gouw.organisation.street') }}, {{ config('gouw.organisation.city') }}" @error('location') aria-invalid="true" aria-describedby="location-error" @enderror>
+                    <input id="location" type="text" name="location" value="{{ old('location', $activity->location) }}" required maxlength="255" placeholder="bv. {{ \App\Models\Organisation::current()->address() }}" @error('location') aria-invalid="true" aria-describedby="location-error" @enderror>
                     @error('location')
                         <p class="error" id="location-error">{{ $message }}</p>
                     @enderror

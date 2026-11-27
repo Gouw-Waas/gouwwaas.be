@@ -11,17 +11,16 @@ use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
- * Beheer → Attest: the stamp on participation certificates, who signs them, and a preview.
+ * Organisatie → Attest: the stamp on participation certificates, who signs them, and a preview.
  */
 class CertificateSettingsController extends Controller
 {
     public function edit(CertificateRenderer $renderer): View
     {
-        return view('attesten.instellingen', [
+        return view('organisatie.attest', [
             'stamp' => Stamp::dataUri(),
             'signers' => $renderer->signers(),
             'problems' => $renderer->problems(),
-            'organisation' => config('gouw.organisation'),
         ]);
     }
 

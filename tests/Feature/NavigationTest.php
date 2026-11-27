@@ -40,11 +40,11 @@ class NavigationTest extends TestCase
         $sidenav = fn () => (string) str($this->get('/')->getContent())->between('id="sidenav"', '</dialog>');
 
         $this->assertStringContainsString('Inloggen', $sidenav());
-        $this->assertStringNotContainsString('Gebruikers', $sidenav());
+        $this->assertStringNotContainsString('Organisatie', $sidenav());
 
         $this->actingAs(User::factory()->create(['name' => 'Akela', 'is_admin' => true]));
         $this->assertStringContainsString('Akela', $sidenav());
-        $this->assertStringContainsString('Gebruikers', $sidenav());
+        $this->assertStringContainsString('Organisatie', $sidenav());
         $this->assertStringContainsString('Uitloggen', $sidenav());
     }
 

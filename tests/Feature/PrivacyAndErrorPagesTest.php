@@ -46,7 +46,7 @@ class PrivacyAndErrorPagesTest extends TestCase
 
     public function test_403(): void
     {
-        $this->actingAs(User::factory()->create())->get('/gebruikers')->assertForbidden()
+        $this->actingAs(User::factory()->create())->get('/organisatie/gebruikers')->assertForbidden()
             ->assertSee('Hier mag je niet binnen')
             ->assertSee('Inloggen');
     }

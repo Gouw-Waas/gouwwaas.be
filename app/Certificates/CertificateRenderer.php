@@ -3,6 +3,7 @@
 namespace App\Certificates;
 
 use App\Models\Activity;
+use App\Models\Organisation;
 use App\Models\Registration;
 use App\Models\Role;
 use App\Models\RoleMember;
@@ -13,7 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
- * Participation certificates (attesten) as PDF: organisation from config('gouw.organisation'),
+ * Participation certificates (attesten) as PDF: the organisation (Organisatie → Gegevens),
  * signed by every Gouwcommissaris on Wie is wie, with the stamp (see Stamp).
  */
 class CertificateRenderer
@@ -54,7 +55,7 @@ class CertificateRenderer
         $problems = [];
 
         if (! Stamp::exists()) {
-            $problems[] = 'Er is nog geen stempel opgeladen. Een beheerder kan dat doen via Beheer → Attest.';
+            $problems[] = 'Er is nog geen stempel opgeladen. Een beheerder kan dat doen via Organisatie → Attest.';
         }
 
         if ($this->signers()->isEmpty()) {
@@ -74,9 +75,10 @@ class CertificateRenderer
 
     public function sampleRegistration(): Registration
     {
+        $organisation = Organisation::current();
         $activity = new Activity([
             'title' => 'Voorbeeldactiviteit',
-            'location' => config('gouw.organisation.building'),
+            'location' => $organisation->building ?: $organisation->city,
             'starts_at' => now()->startOfDay()->setTime(9, 0),
             'ends_at' => now()->startOfDay()->setTime(17, 0),
             'training_hours' => 3,
@@ -102,13 +104,12 @@ class CertificateRenderer
     public function html(Registration $registration): string
     {
         $activity = $registration->activity;
-        $organisation = config('gouw.organisation');
-        $logo = public_path($organisation['logo']);
+        $logo = public_path(config('gouw.logo'));
 
         return view('attesten.attest', [
             'activity' => $activity,
             'registration' => $registration,
-            'organisation' => $organisation,
+            'organisation' => Organisation::current(),
             'signers' => $this->signers(),
             'stamp' => Stamp::dataUri(),
             'logo' => is_file($logo) ? 'data:image/png;base64,'.base64_encode((string) file_get_contents($logo)) : null,

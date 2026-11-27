@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Organisation;
 use App\Models\Registration;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Attachment;
@@ -26,9 +27,11 @@ class CertificateMail extends Mailable
 
     public function envelope(): Envelope
     {
+        $organisation = Organisation::current();
+
         return new Envelope(
             subject: 'Deelnameattest: '.$this->registration->activity->title,
-            replyTo: [new Address(config('gouw.organisation.email'), config('gouw.organisation.name'))],
+            replyTo: [new Address($organisation->email, $organisation->name)],
         );
     }
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Admin\CertificateSettingsController;
+use App\Http\Controllers\Admin\OrganisationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
@@ -105,11 +106,22 @@ Route::middleware('auth')->group(function () {
     Route::put('/profiel/wachtwoord', [ProfileController::class, 'updatePassword'])->name('profiel.wachtwoord');
 
     Route::middleware('can:admin')->group(function () {
-        Route::resource('gebruikers', UserController::class)
-            ->except('show')
-            ->parameters(['gebruikers' => 'gebruiker']);
-        Route::post('/gebruikers/{gebruiker}/wachtwoord-reset', [UserController::class, 'forcePasswordReset'])
-            ->name('gebruikers.wachtwoord-reset');
+        // Organisatie (one button in the header): the organisation's details, the users and
+        // the participation certificate (stamp, signers, preview), as tabs.
+        Route::prefix('organisatie')->group(function () {
+            Route::get('/', [OrganisationController::class, 'edit'])->name('organisatie.edit');
+            Route::put('/', [OrganisationController::class, 'update'])->name('organisatie.update');
+
+            Route::resource('gebruikers', UserController::class)
+                ->except('show')
+                ->parameters(['gebruikers' => 'gebruiker']);
+            Route::post('/gebruikers/{gebruiker}/wachtwoord-reset', [UserController::class, 'forcePasswordReset'])
+                ->name('gebruikers.wachtwoord-reset');
+
+            Route::get('/attest', [CertificateSettingsController::class, 'edit'])->name('attest.instellingen');
+            Route::put('/attest', [CertificateSettingsController::class, 'update'])->name('attest.instellingen.update');
+            Route::get('/attest/voorbeeld.pdf', [CertificateSettingsController::class, 'preview'])->name('attest.voorbeeld');
+        });
 
         // Past activities: delete permanently, without refunds or e-mails.
         Route::post('/activiteiten/{activity}/archiveren', [ActivityController::class, 'archive'])->name('activiteiten.archive');
@@ -129,11 +141,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/blokken/{block}/bewerken', [PageBlockController::class, 'edit'])->name('blokken.edit');
         Route::put('/blokken/{block}', [PageBlockController::class, 'update'])->name('blokken.update');
         Route::delete('/blokken/{block}', [PageBlockController::class, 'destroy'])->name('blokken.destroy');
-
-        // Participation certificates: stamp, signers and a preview.
-        Route::get('/beheer/attest', [CertificateSettingsController::class, 'edit'])->name('attest.instellingen');
-        Route::put('/beheer/attest', [CertificateSettingsController::class, 'update'])->name('attest.instellingen.update');
-        Route::get('/beheer/attest/voorbeeld.pdf', [CertificateSettingsController::class, 'preview'])->name('attest.voorbeeld');
 
         // Wie is wie: only adjuncten can be added or removed (checked in the controller).
         Route::get('/wie-is-wie/adjuncten/nieuw', [RoleController::class, 'create'])->name('wie-is-wie.create');

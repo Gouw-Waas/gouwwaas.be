@@ -31,11 +31,13 @@
                 <td class="org-logo"><img src="{{ $logo }}" alt=""></td>
             @endif
             <td class="org">
-                <strong>{{ $organisation['full_name'] }}</strong><br>
-                {{ $organisation['building'] }}<br>
-                {{ $organisation['street'] }}<br>
-                {{ $organisation['city'] }}<br>
-                {{ $organisation['email'] }}
+                <strong>{{ $organisation->full_name }}</strong><br>
+                @if ($organisation->building)
+                    {{ $organisation->building }}<br>
+                @endif
+                {{ $organisation->street }}<br>
+                {{ $organisation->city }}<br>
+                {{ $organisation->email }}
             </td>
         </tr>
     </table>
@@ -44,7 +46,7 @@
 
     <div class="declaration">
         <p>
-            {{ $organisation['name'] }} verklaart dat <strong>{{ $registration->name }}</strong> heeft deelgenomen aan
+            {{ $organisation->name }} verklaart dat <strong>{{ $registration->name }}</strong> heeft deelgenomen aan
             <strong>{{ $activity->title }}</strong> te {{ $activity->location }}, {{ $dateText }}.
         </p>
         <p>Deze activiteit is goed voor <strong>{{ $activity->trainingHoursLabel() }} vormingsuren</strong>.</p>
@@ -58,7 +60,7 @@
                 @foreach ($signers as $signer)
                     <p>{{ $signer }}</p>
                 @endforeach
-                <p class="signature-role">{{ $signers->count() > 1 ? 'Gouwcommissarissen' : 'Gouwcommissaris' }}, {{ $organisation['name'] }}</p>
+                <p class="signature-role">{{ $signers->count() > 1 ? 'Gouwcommissarissen' : 'Gouwcommissaris' }}, {{ $organisation->name }}</p>
             </td>
             <td class="stamp">
                 @if ($stamp)
