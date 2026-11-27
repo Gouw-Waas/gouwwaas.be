@@ -17,7 +17,6 @@
             </div>
             @php
                 $confirmed = $activity->registrations->filter->isConfirmed()->count();
-                $unfinished = $activity->registrations->count() - $confirmed;
                 // Added by an organiser, paying later.
                 $toPay = $activity->registrations->filter(fn ($registration) => $registration->isManual() && $registration->canBeMarkedPaid())->count();
                 // Certificates (toolbar above the table).
@@ -27,9 +26,6 @@
                 {{ $confirmed }} {{ $confirmed === 1 ? 'inschrijving' : 'inschrijvingen' }}
                 @if ($toPay)
                     <span class="muted">(waarvan {{ $toPay }} nog te betalen)</span>
-                @endif
-                @if ($unfinished)
-                    <span class="muted">(+ {{ $unfinished }} niet betaald)</span>
                 @endif
                 · {{ $activity->dateLabel() }}
             </p>

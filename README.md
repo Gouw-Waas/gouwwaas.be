@@ -131,7 +131,11 @@ address (`localhost`) no webhook is sent, because Mollie can't reach it. The e-m
 sent exactly once, and straight away (production has no queue worker). The price is
 stored with the registration, so a later price change doesn't change what was agreed.
 Organisers see the payment status per registration (overview and Excel); only paid and
-free registrations (and those added by an organiser) count. The code is in `app/Payments` (Mollie behind a
+free registrations (and those added by an organiser) count. Online registrations that aren't
+paid yet (payment in progress, never clicked "Betalen", or the payment failed / was canceled
+/ expired) are left out of the overview and the Excel; the ones that will never be paid are
+deleted by the nightly clean-up a day later (see
+**Automatic archiving**). The code is in `app/Payments` (Mollie behind a
 `PaymentGateway` interface, faked in the tests).
 
 **Cancelling and refunds.** Participants can't cancel themselves: the confirmation e-mail
@@ -249,8 +253,13 @@ so run `php artisan storage:link` once locally (deploys do this automatically).
 **Automatic archiving.** Activities are archived automatically `archive_after_months`
 (`config/gouw.php`, 24) after they ended: the activity and its registrations are deleted,
 without refunds or e-mails (`php artisan activities:archive`; `--dry-run` previews, `-v`
-shows what it does). It runs once a day from a cron job set in the hosting control panel
-(the host doesn't allow `crontab` over SSH):
+shows what it does). The same command also cleans up unpaid online registrations: payments
+still in progress after a day are checked with Mollie again (in case a webhook was missed),
+and registrations without a payment, or whose payment failed, are deleted once nobody has
+touched them for a day (`Registration::ABANDONED_AFTER_HOURS`; until then the payer can still
+"Opnieuw proberen" on their page). If Mollie can't be reached the command fails, so cron
+mails it; those payments are tried again the next night. It runs once a day from a cron
+job set in the hosting control panel (the host doesn't allow `crontab` over SSH):
 
 | Field | Value |
 | --- | --- |

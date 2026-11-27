@@ -259,21 +259,28 @@ class CheckoutTest extends TestCase
         $this->post("/inschrijvingen/{$paid->token}/betalen");
         $this->gateway->statuses['tr_test1'] = 'paid';
         $this->get("/inschrijvingen/{$paid->token}");
-        $this->register($activity, ['name' => 'Open Olga']);
+        $open = $this->register($activity, ['name' => 'Open Olga']);
+        $this->post("/inschrijvingen/{$open->token}/betalen"); // tr_test2, still open
+        $this->register($activity, ['name' => 'Nooit Nina']); // never clicked "Betalen"
+        $failed = $this->register($activity, ['name' => 'Mislukte Mieke']);
+        $this->post("/inschrijvingen/{$failed->token}/betalen");
+        $this->gateway->statuses['tr_test3'] = 'failed';
+        $this->get("/inschrijvingen/{$failed->token}");
 
         $this->actingAs($activity->user);
         $this->get("/activiteiten/{$activity->slug}")->assertSee('Inschrijvingen (1)');
         $this->get("/activiteiten/{$activity->slug}/inschrijvingen")->assertOk()
             ->assertSee('1 inschrijving')
-            ->assertSee('+ 1 niet betaald')
-            ->assertSeeInOrder(['Open Olga', 'Niet betaald'])
-            ->assertSeeInOrder(['Betaalde Bert', 'Betaald']);
+            ->assertSeeInOrder(['Betaalde Bert', 'Betaald'])
+            // Only paid ones: unpaid ones are left out (and abandoned ones cleaned up at night).
+            ->assertDontSee('Open Olga')
+            ->assertDontSee('Nooit Nina')
+            ->assertDontSee('Mislukte Mieke');
 
         $rows = $this->readXlsx($this->get("/activiteiten/{$activity->slug}/inschrijvingen.xlsx")->streamedContent());
         $bert = collect($rows)->first(fn (array $row) => $row[1] === 'Betaalde Bert');
-        $olga = collect($rows)->first(fn (array $row) => $row[1] === 'Open Olga');
         $this->assertSame(['Betaald', 12.5], [$bert[3], $bert[4]]); // amount as a number, formatted as euro
-        $this->assertSame('Niet betaald', $olga[3]);
+        $this->assertSame(['Betaalde Bert'], collect($rows)->skip(1)->pluck(1)->values()->all());
     }
 
     public function test_the_confirmation_mail(): void
