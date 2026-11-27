@@ -204,7 +204,7 @@ signed by everyone with the Gouwcommissaris function on Wie is wie. Without a st
 Gouwcommissaris, no certificates can
 be made and the overview says why.
 
-**Organisation details.** The name, full name, building, address and e-mail of the
+**Organisation details.** The name, building, address and e-mail of the
 organisation are edited by admins on Organisatie → Gegevens (`/organisatie`) and stored
 in the one-row `organisation` table (`App\Models\Organisation::current()`). They are
 used on certificates, as reply-to address of certificate mails, in the footer, on the

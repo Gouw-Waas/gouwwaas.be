@@ -28,7 +28,6 @@ class OrganisationController extends Controller
         $logoMessage = 'Laad een PNG-afbeelding op van maximaal 2 MB.';
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'full_name' => ['required', 'string', 'max:255'],
             'building' => ['nullable', 'string', 'max:255'],
             'street' => ['required', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:255'],

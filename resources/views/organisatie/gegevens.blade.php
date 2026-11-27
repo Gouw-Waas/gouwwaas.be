@@ -22,8 +22,7 @@
             </p>
 
             @foreach ([
-                'name' => ['Korte naam', 'text', 100, 'organization', 'bv. Gouw Waas'],
-                'full_name' => ['Volledige naam', 'text', 255, 'off', 'bv. Gouw Waas – Scouts en Gidsen Vlaanderen'],
+                'name' => ['Naam', 'text', 100, 'organization', 'bv. Gouw Waas'],
                 'building' => ['Gebouw (optioneel)', 'text', 255, 'off', 'bv. Gouwhuis Karree'],
                 'street' => ['Straat en nummer', 'text', 255, 'street-address', null],
                 'city' => ['Postcode en gemeente', 'text', 255, 'off', 'bv. 9100 Sint-Niklaas'],

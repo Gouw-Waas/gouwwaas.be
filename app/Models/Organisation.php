@@ -11,13 +11,12 @@ use Illuminate\Database\Eloquent\Model;
  * without one, the defaults from config('gouw.organisation') are used.
  *
  * @property string $name
- * @property string $full_name
  * @property string|null $building
  * @property string $street
  * @property string $city
  * @property string $email
  */
-#[Fillable(['name', 'full_name', 'building', 'street', 'city', 'email'])]
+#[Fillable(['name', 'building', 'street', 'city', 'email'])]
 class Organisation extends Model
 {
     protected $table = 'organisation';

@@ -31,7 +31,7 @@
                 <td class="org-logo"><img src="{{ $logo }}" alt=""></td>
             @endif
             <td class="org">
-                <strong>{{ $organisation->full_name }}</strong><br>
+                <strong>{{ $organisation->name }} – Scouts en Gidsen Vlaanderen</strong><br>
                 @if ($organisation->building)
                     {{ $organisation->building }}<br>
                 @endif

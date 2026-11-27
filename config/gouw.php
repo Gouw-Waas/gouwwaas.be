@@ -14,7 +14,6 @@ return [
     */
     'organisation' => [
         'name' => 'Gouw Waas',
-        'full_name' => 'Gouw Waas – Scouts en Gidsen Vlaanderen',
         'building' => 'Gouwhuis Karree',
         'street' => 'Apostelstraat 5',
         'city' => '9100 Sint-Niklaas',

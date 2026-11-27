@@ -24,7 +24,6 @@ class OrganisationTest extends TestCase
     {
         return [
             'name' => 'Gouw Test',
-            'full_name' => 'Gouw Test – Scouts en Gidsen Vlaanderen',
             'building' => 'Testhuis',
             'street' => 'Teststraat 1',
             'city' => '9000 Gent',
